@@ -1,0 +1,32 @@
+{
+  "name": "cordova.openwith.plugin",
+  "version": "1.0.0",
+  "description": "Cordova \"Open With\" plugin for iOS and Android",
+  "cordova": {
+    "id": "cordova.openwith.plugin",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OutSystemsExperts/cordova-openwith-plugin.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios",
+    "cordova",
+    "openwith",
+    "outsystems",
+    "ios",
+    "android"
+  ],
+  "author": "Luis Bouça <luis.bouca@outsystems.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OutSystemsExperts/cordova-openwith-plugin/issues"
+  },
+  "homepage": "https://github.com/OutSystemsExperts/cordova-openwith-plugin",
+}

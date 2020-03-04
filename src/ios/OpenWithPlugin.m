@@ -44,8 +44,8 @@
     NSDictionary* result;
     if (self.handlerCallback == nil) {
         result = @{
-            @"code":@"1",
-            @"message":@"Callback Handler not set!"
+            @"ErrorCode":@"1",
+            @"ErrorMessage":@"Callback Handler not defined!"
         };
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
         pluginResult.keepCallback = [NSNumber numberWithBool:YES];
@@ -70,8 +70,8 @@
         if (![data isKindOfClass:NSData.class]) {
             NSLog(@"[checkForFileToShare] Data content is invalid");
             result = @{
-                @"code":@"2",
-                @"message":@"Data content is invalid!"
+                @"ErrorCode":@"2",
+                @"ErrorMessage":@"Data content is invalid!"
             };
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
             pluginResult.keepCallback = [NSNumber numberWithBool:YES];

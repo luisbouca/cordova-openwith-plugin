@@ -83,7 +83,7 @@
                 @"items": @[@{
                     @"base64": [data convertToBase64],
                     @"type": type,
-                    @"uri": [uri absoluteString],
+                    @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
                     @"name": name
                 }]
             };
@@ -93,7 +93,7 @@
             @"action": @"SEND",
             @"items": @[@{
                 @"type": type,
-                @"uri": [uri absoluteString],
+                @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
                 @"name": name
             }]
         };

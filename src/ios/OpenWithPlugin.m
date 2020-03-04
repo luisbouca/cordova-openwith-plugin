@@ -29,7 +29,7 @@
     if ([command.arguments count] <1) {
         self.withData = NO;
     }else{
-        self.withData = command.arguments[0];
+        self.withData = [command.arguments[0] boolValue];
     }
     
     self.callbackError = command.callbackId;

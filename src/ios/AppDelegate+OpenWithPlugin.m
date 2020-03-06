@@ -7,7 +7,8 @@
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options{
     NSLog(@"url received!");
     OpenWithPlugin *openWithHandler = [self.viewController getCommandInstance:@"OpenWithPlugin"];
-    [openWithHandler handleFilesReceived:url];
+    NSString * path = [[[url path] substringFromIndex:1] stringByRemovingPercentEncoding];
+    [openWithHandler handleFilesReceived:path];
     return true;
 }
 

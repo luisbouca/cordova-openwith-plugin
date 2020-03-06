@@ -1,4 +1,5 @@
 #import <Cordova/CDV.h>
+#import "ShareViewController.h"
 #import "AppDelegate.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -52,17 +53,13 @@
 
 @interface OpenWithPlugin : CDVPlugin {
     NSString* _handlerCallback;
-    NSString* _callbackError;
-    NSString* _backURL;
+    Boolean withData;
 }
 
 @property (nonatomic,retain) NSString* handlerCallback;
-@property (nonatomic,retain) NSString* callbackError;
-@property (nonatomic) BOOL withData;
+@property (nonatomic) Boolean withData;
 
--(void) handleFilesReceived:(NSURL *)uri;
-- (void) reset:(CDVInvokedUrlCommand*)command;
-- (void) setHandler:(CDVInvokedUrlCommand*)command;
+-(void) handleFilesReceived:(NSString *) path;
 - (void) init:(CDVInvokedUrlCommand*)command;
 
 @end

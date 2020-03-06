@@ -40,6 +40,9 @@ SOFTWARE.
     <!-- ios -->
     <platform name="ios">
 
+        <preference name="IOS_URL_SCHEME" />
+
+
         <config-file target="config.xml" parent="/*">
             <feature name="OpenWithPlugin">
                 <param name="ios-package" value="OpenWithPlugin" />
@@ -47,23 +50,23 @@ SOFTWARE.
             </feature>
         </config-file>
 
-        <config-file target="*-Info.plist" parent="CFBundleDocumentTypes">
+        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
             <array>
-                    <dict>
-                        <key>CFBundleTypeName</key>
-                        <string>Open All Files</string>
-                        <key>LSHandlerRank</key>
-                        <string>Owner</string>
-                        <key>CFBundleTypeRole</key>
-                        <string>Editor</string>
-                        <key>LSItemContentTypes</key>
-                        <array>
-                            <string>public.content</string>
-                            <string>public.data</string>
-                        </array>
-                    </dict>
+                <dict>
+                    <key>CFBundleURLName</key>
+                    <string>cordova.openwith.plugin.$IOS_URL_SCHEME.shareextension</string>
+                    <key>CFBundleURLSchemes</key>
+                    <array>
+                        <string>$IOS_URL_SCHEME</string>
+                    </array>
+                </dict>
             </array>
         </config-file>
+
+        <hook type="before_plugin_install" src="hooks/npmInstall.js" />
+        <hook type="before_plugin_install" src="hooks/iosCopyShareExtension.js" />
+        <hook type="after_plugin_add" src="hooks/iosAddTarget.js" />
+        <hook type="before_plugin_uninstall" src="hooks/iosRemoveTarget.js" />
 
         <source-file src="src/ios/OpenWithPlugin.h" />
         <source-file src="src/ios/OpenWithPlugin.m" />

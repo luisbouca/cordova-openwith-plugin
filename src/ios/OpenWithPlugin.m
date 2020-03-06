@@ -1,28 +1,17 @@
 #import <Cordova/CDV.h>
+#import "ShareViewController.h"
 #import "OpenWithPlugin.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 
 
+/*
+ * OpenWithPlugin implementation
+ */
+
 @implementation OpenWithPlugin
 
 @synthesize handlerCallback = _handlerCallback;
-@synthesize callbackError = _callbackError;
-@synthesize withData;
-
-
-
-- (void) reset:(CDVInvokedUrlCommand*)command {
-    NSLog(@"[onReset]");
-    self.handlerCallback = nil;
-}
-
-- (void) setHandler:(CDVInvokedUrlCommand*)command {
-    self.handlerCallback = command.callbackId;
-    NSLog([NSString stringWithFormat:@"[setHandler] %@", self.handlerCallback]);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-    pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
+@synthesize withData = _withData;
 
 // Initialize the plugin
 - (void) init:(CDVInvokedUrlCommand*)command {
@@ -31,36 +20,20 @@
     }else{
         self.withData = [command.arguments[0] boolValue];
     }
-    
-    self.callbackError = command.callbackId;
-    
+    self.handlerCallback = command.callbackId;
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+    pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void) handleFilesReceived:(NSURL *) uri{
+- (void) handleFilesReceived:(NSString *) path{
     
     NSDictionary* result;
     if (self.handlerCallback == nil) {
-        result = @{
-            @"ErrorCode":@"1",
-            @"ErrorMessage":@"Callback Handler not defined!"
-        };
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-        pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackError];
         return;
     }
-    //TODO: Accept multiple files
-    //NSFileManager * fileManager = [NSFileManager defaultManager];
-    //NSError * error;
-    
-    //NSArray<NSString *> * paths = [fileManager contentsOfDirectoryAtPath:[[url path] stringByDeletingLastPathComponent] error:&error];
-    //if (error != nil) {
-    //    return;
-    //}
-    
+    NSURL * uri = [NSURL fileURLWithPath:path];
+
     NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
         
     NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
@@ -75,11 +48,10 @@
             };
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
             pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackError];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
             return;
         }else{
             result = @{
-                @"action": @"SEND",
                 @"items": @[@{
                     @"base64": [data convertToBase64],
                     @"type": type,
@@ -90,7 +62,6 @@
         }
     }else{
         result = @{
-            @"action": @"SEND",
             @"items": @[@{
                 @"type": type,
                 @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
@@ -105,4 +76,3 @@
 }
 
 @end
-// vim: ts=4:sw=4:et

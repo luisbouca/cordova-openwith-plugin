@@ -18,8 +18,6 @@ module.exports = {
 
     getCordovaParameter: function (variableName, contents) {
         var variable;
-        console.log("variable name:"+variableName);
-        console.log(process.argv);
         if(process.argv.join("|").indexOf(variableName + "=") > -1) {
             var re = new RegExp(variableName + '=(.*?)(\||$)', 'g');
             variable = process.argv.join("|").match(re)[1];

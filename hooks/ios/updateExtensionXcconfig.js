@@ -15,15 +15,17 @@ module.exports = function(context) {
      var iosFolder = context.opts.cordova.project
     ? context.opts.cordova.project.root
     : path.join(context.opts.projectRoot, 'platforms/ios/');
+    
+    var contents = fs.readFileSync(
+        path.join(context.opts.projectRoot, 'config.xml'),
+        'utf-8'
+    );
 
     var extensionName = getCordovaParameter("EXTENSION_NAME",contents);
     var xcConfigPath = path.join(iosFolder, extensionName.replace(" ",""), 'Config.xcconfig');
     log(xcConfigPath,"start");
 
-    var contents = fs.readFileSync(
-        path.join(context.opts.projectRoot, 'config.xml'),
-        'utf-8'
-    );
+    
 
     var ppDecoded = decode(getCordovaParameter("PROVISIONING_PROFILES",contents));
     var ppObject = JSON.parse(ppDecoded.replace(/'/g, "\""));

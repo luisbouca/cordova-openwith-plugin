@@ -8,6 +8,14 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
+function replacer (match, p1, p2, p3, offset, string){
+    if(p2.includes("PRODUCT_BUNDLE_IDENTIFIER")){
+      return [p1,p3].join("");
+    }else{
+      return [p1,p2,p3].join("");
+    }
+}
+
 module.exports = function(context) {
     
     log(
@@ -45,6 +53,18 @@ module.exports = function(context) {
     var plistContents = fs.readFileSync(buildJsPath, 'utf8');
     plistContents = plistContents.replace(regexp, toReplace + ppString);
     fs.writeFileSync(buildJsPath, plistContents);
+
+    var prepareJsPath = path.join(
+        iosFolder,
+        'cordova/lib',
+        'prepare.js'
+    )
+    var prepareJsContents = fs.readFileSync(prepareJsPath);
+
+    var regex = /(.*)(if \(origPkg !== pkg\).*PRODUCT_BUNDLE_IDENTIFIER', pkg\);\s[ ]*})(.*)/gms
+    prepareJsContents = prepareJsContents.replace(regex,replacer);
+
+    fs.writeFileSync(prepareJsPath,prepareJsContents);
 
     log('Successfully edited build.js', 'success');
 }

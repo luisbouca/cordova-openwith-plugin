@@ -65,14 +65,10 @@ SOFTWARE.
 
         <hook type="after_plugin_install" src="hooks/ios/CopyShareExtension.js" />
         <hook type="after_plugin_install" src="hooks/ios/AddTarget.js" />
-
-        <!--hook type="after_plugin_install" src="hooks/ios/addTodayWidgetToProject.js"/>
-        <hook type="after_plugin_install" src="hooks/ios/copyExtensionFolderToIosProjectFolder.js"/-->
-
-
         <hook type="before_plugin_install" src="hooks/npmInstall.js"/>
         <hook type="before_plugin_install" src="hooks/ios/copyAndUnzipProvisioningProfiles.js"/>
         <hook type="after_plugin_install" src="hooks/ios/copyProvisioningProfiles.js"/>
+
         <hook type="after_prepare" src="hooks/ios/updateExtensionXcconfig.js"/>
         <hook type="after_prepare" src="hooks/ios/updateCordovaBuildJs.js"/>
 

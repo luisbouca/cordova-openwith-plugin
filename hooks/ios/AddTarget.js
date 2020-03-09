@@ -287,10 +287,14 @@ module.exports = function (context) {
     });
 
     //Add development team and provisioning profile
-    var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
+    var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'PROVISIONING_PROFILES');
+    if(PROVISIONING_PROFILE){
+      PROVISIONING_PROFILE = PROVISIONING_PROFILE.match(/[s|S]*:'(.*)'}/g)[0].replace(":'","").replace("'}","");
+    }
     var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'DEVELOPMENT_TEAM');
-    console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE);
-    if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM) {
+    var BUNDLE_ID = getCordovaParameter(configXml, 'PRODUCT_BUNDLE_IDENTIFIER');
+    console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE, 'and bundleid ', BUNDLE_ID);
+    if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM && BUNDLE_ID) {
       var configurations = pbxProject.pbxXCBuildConfigurationSection();
       for (var key in configurations) {
         if (typeof configurations[key].buildSettings !== 'undefined') {
@@ -300,6 +304,7 @@ module.exports = function (context) {
             if (productName.indexOf('ShareExt') >= 0) {
               buildSettingsObj['PROVISIONING_PROFILE'] = PROVISIONING_PROFILE;
               buildSettingsObj['DEVELOPMENT_TEAM'] = DEVELOPMENT_TEAM;
+              buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = BUNDLE_ID;
               console.log('Added signing identities for extension!');
             }
           }

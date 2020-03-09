@@ -117,7 +117,6 @@ function findXCodeproject(context, callback) {
 
 module.exports = function(context) {
   const Q = context.requireCordovaModule('q');
-  //var Q = require('q');
   var deferral = new Q.defer();
 
   findXCodeproject(context, function(projectFolder, projectName) {

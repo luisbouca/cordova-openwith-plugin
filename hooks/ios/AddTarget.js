@@ -288,7 +288,7 @@ module.exports = function (context) {
 
     //Add development team and provisioning profile
     var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
-    var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'SHAREEXT_DEVELOPMENT_TEAM');
+    var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'DEVELOPMENT_TEAM');
     console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE);
     if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM) {
       var configurations = pbxProject.pbxXCBuildConfigurationSection();

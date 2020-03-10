@@ -74,4 +74,35 @@ SOFTWARE.
 
     </platform>
 
+    <!-- android -->
+  <platform name="android">
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application/activity">
+      <intent-filter>
+        <!-- See https://developer.android.com/guide/topics/manifest/data-element.html -->
+        <data android:mimeType="audio/*" />
+        <data android:mimeType="application/*" />
+        <!--data android:mimeType="video/*" /-->
+        <data android:mimeType="image/*" />
+        <data android:mimeType="text/*" />
+        <action android:name="android.intent.action.SEND" />
+        <!--action android:name="android.intent.action.SEND_MULTIPLE" /-->
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+      </intent-filter>
+    </config-file>
+
+    <!-- Cordova >= 3.0.0 -->
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="OpenWithPlugin">
+        <param name="android-package" value="com.missiveapp.openwith.OpenWithPlugin"/>
+      </feature>
+    </config-file>
+
+    <!-- cordova plugin src files -->
+    <source-file src="src/android/OpenWithPlugin.java" target-dir="src/com/missiveapp/openwith" />
+    <source-file src="src/android/PluginResultSender.java" target-dir="src/com/missiveapp/openwith" />
+    <source-file src="src/android/Serializer.java" target-dir="src/com/missiveapp/openwith" />
+  </platform>
+
 </plugin>

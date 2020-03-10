@@ -59,7 +59,7 @@ module.exports = function(context) {
         'cordova/lib',
         'prepare.js'
     )
-    var prepareJsContents = fs.readFileSync(prepareJsPath);
+    var prepareJsContents = fs.readFileSync(prepareJsPath,'utf8');
 
     var regex = /(.*)(if \(origPkg !== pkg\).*PRODUCT_BUNDLE_IDENTIFIER', pkg\);\s[ ]*})(.*)/gms
     prepareJsContents = prepareJsContents.replace(regex,replacer);

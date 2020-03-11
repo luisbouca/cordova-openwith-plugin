@@ -101,8 +101,9 @@ SOFTWARE.
     </config-file>
 
 
-    <hook type="before_plugin_install" src="hooks/android/manifest-SingleInstance.js" />
-
+    <hook type="before_prepare" src="hooks/android/manifest-SingleInstance.js" />
+    <hook type="before_compile" src="hooks/android/manifest-SingleInstance.js" />
+    
     <!-- cordova plugin src files -->
     <source-file src="src/android/OpenWithPlugin.java" target-dir="src/com/missiveapp/openwith" />
     <source-file src="src/android/Serializer.java" target-dir="src/com/missiveapp/openwith" />

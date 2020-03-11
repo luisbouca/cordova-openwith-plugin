@@ -97,8 +97,7 @@ public class OpenWithPlugin extends CordovaPlugin {
 
   /** Calls the javascript intent handlers. */
   private void sendIntentToJavascript(final JSONObject intent) {
-    final String intentString = intent.toString();
-     final PluginResult result = new PluginResult(PluginResult.Status.OK, intentString);
+    final PluginResult result = new PluginResult(PluginResult.Status.OK, intent);
 
     result.setKeepCallback(true);
     handlerContext.sendPluginResult(result);

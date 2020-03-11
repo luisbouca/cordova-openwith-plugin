@@ -13,20 +13,17 @@ module.exports = function (context) {
     var Q = context.requireCordovaModule("q");
     var deferral = new Q.defer();
 
-    var platform = context.opts.plugin.platform;
-    if (platform === "android") {
-        var projectRoot = context.opts.cordova.project ? context.opts.cordova.project.root : context.opts.projectRoot;
-        var manifestPath = path.join(projectRoot,"platforms","android","app","src","main","AndroidManifest.xml");
-        var manifest = fs.readFileSync(manifestPath, "utf8");
+    var projectRoot = context.opts.cordova.project ? context.opts.cordova.project.root : context.opts.projectRoot;
+    var manifestPath = path.join(projectRoot,"platforms","android","app","src","main","AndroidManifest.xml");
+    var manifest = fs.readFileSync(manifestPath, "utf8");
 
-        var regex = /(<\?xml[.|\s|\S]*<activity[.|\s|\S]*)(launchMode="\w*")([\s|\S]*manifest>)/gm;
+    var regex = /(<\?xml[.|\s|\S]*<activity[.|\s|\S]*)(launchMode="\w*")([\s|\S]*manifest>)/gm;
 
-        manifest = manifest.replace(regex,replacer);
-        
-        fs.writeFileSync(manifestPath, manifest);
-        console.log("Finished changing Manifest!");
-        deferral.resolve();
-    }
+    manifest = manifest.replace(regex,replacer);
+    
+    fs.writeFileSync(manifestPath, manifest);
+    console.log("Finished changing Manifest!");
+    deferral.resolve();
 
     return deferral.promise;
 }

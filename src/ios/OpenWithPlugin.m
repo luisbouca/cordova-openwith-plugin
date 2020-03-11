@@ -6,23 +6,8 @@
 @implementation OpenWithPlugin
 
 @synthesize handlerCallback = _handlerCallback;
-@synthesize callbackError = _callbackError;
 @synthesize withData;
 
-
-
-- (void) reset:(CDVInvokedUrlCommand*)command {
-    NSLog(@"[onReset]");
-    self.handlerCallback = nil;
-}
-
-- (void) setHandler:(CDVInvokedUrlCommand*)command {
-    self.handlerCallback = command.callbackId;
-    NSLog([NSString stringWithFormat:@"[setHandler] %@", self.handlerCallback]);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-    pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
 
 // Initialize the plugin
 - (void) init:(CDVInvokedUrlCommand*)command {
@@ -31,11 +16,9 @@
     }else{
         self.withData = [command.arguments[0] boolValue];
     }
-    
-    self.callbackError = command.callbackId;
-    
+    self.handlerCallback = command.callbackId;
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+    pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -43,13 +26,6 @@
     
     NSDictionary* result;
     if (self.handlerCallback == nil) {
-        result = @{
-            @"ErrorCode":@"1",
-            @"ErrorMessage":@"Callback Handler not defined!"
-        };
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-        pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackError];
         return;
     }
     //TODO: Accept multiple files
@@ -75,7 +51,7 @@
             };
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
             pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackError];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
             return;
         }else{
             result = @{

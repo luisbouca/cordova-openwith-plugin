@@ -74,4 +74,40 @@ SOFTWARE.
 
     </platform>
 
+    <!-- android -->
+  <platform name="android">
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application/activity">
+      <intent-filter>
+        <!-- See https://developer.android.com/guide/topics/manifest/data-element.html -->
+        <data android:mimeType="audio/*" />
+        <data android:mimeType="application/*" />
+        <data android:mimeType="image/*" />
+        <data android:mimeType="text/*" />
+        <action android:name="android.intent.action.SEND" />
+        <!--action android:name="android.intent.action.SEND_MULTIPLE" /-->
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+      </intent-filter>
+    </config-file>
+
+    <!-- Cordova >= 3.0.0 -->
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="OpenWithPlugin">
+        <param name="android-package" value="com.missiveapp.openwith.OpenWithPlugin"/>
+        <param name="onload" value="true"/>
+      </feature>
+    </config-file>
+
+
+    <hook type="before_prepare" src="hooks/android/manifest-LegacyStorage.js" />
+
+    <hook type="before_prepare" src="hooks/android/manifest-SingleInstance.js" />
+    <hook type="before_compile" src="hooks/android/manifest-SingleInstance.js" />
+
+    <!-- cordova plugin src files -->
+    <source-file src="src/android/OpenWithPlugin.java" target-dir="src/com/missiveapp/openwith" />
+    <source-file src="src/android/Serializer.java" target-dir="src/com/missiveapp/openwith" />
+  </platform>
+
 </plugin>

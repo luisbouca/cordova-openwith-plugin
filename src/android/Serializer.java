@@ -159,12 +159,20 @@ class Serializer {
     }
 
     final JSONObject json = new JSONObject();
-    final String uriString;
+    String uriString;
+    if (uri != null && "content".equals(uri.getScheme())) {
+      Cursor cursor = contentResolver.query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+      cursor.moveToFirst();
+      uriString = cursor.getString(0);
+      cursor.close();
+    } else {
+      uriString = uri.getPath();
+    }
     try {
-      uriString = URLDecoder.decode(uri.toString(),"UTF-8");
+      uriString = URLDecoder.decode(uriString,"UTF-8");
       json.put("uri", uriString);
     } catch (UnsupportedEncodingException e) {
-      json.put("uri", uri);
+      json.put("uri", uriString);
     }
     final String type = contentResolver.getType(uri);
     String suggestedName = getNamefromURI(contentResolver, uri);

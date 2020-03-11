@@ -160,6 +160,7 @@ class Serializer {
 
     final JSONObject json = new JSONObject();
     String uriString;
+    //Traditional Storage
     if (uri != null && "content".equals(uri.getScheme())) {
       Cursor cursor = contentResolver.query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
       cursor.moveToFirst();
@@ -168,6 +169,11 @@ class Serializer {
     } else {
       uriString = uri.getPath();
     }
+    //Scoped Storage
+    /*
+    uriString=uri.toString();
+    */
+    //end Storage Duality
     try {
       uriString = URLDecoder.decode(uriString,"UTF-8");
       json.put("uri", uriString);

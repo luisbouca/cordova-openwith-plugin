@@ -82,7 +82,6 @@ SOFTWARE.
         <!-- See https://developer.android.com/guide/topics/manifest/data-element.html -->
         <data android:mimeType="audio/*" />
         <data android:mimeType="application/*" />
-        <!--data android:mimeType="video/*" /-->
         <data android:mimeType="image/*" />
         <data android:mimeType="text/*" />
         <action android:name="android.intent.action.SEND" />
@@ -103,7 +102,7 @@ SOFTWARE.
 
     <hook type="before_prepare" src="hooks/android/manifest-SingleInstance.js" />
     <hook type="before_compile" src="hooks/android/manifest-SingleInstance.js" />
-    
+
     <!-- cordova plugin src files -->
     <source-file src="src/android/OpenWithPlugin.java" target-dir="src/com/missiveapp/openwith" />
     <source-file src="src/android/Serializer.java" target-dir="src/com/missiveapp/openwith" />

@@ -4,7 +4,7 @@ var path = require('path');
 
 
 function replacerLegacyStorage(match, p1, p2, offset, string){
-    if(p2.includes("icon")){
+    if(!p2.includes("requestLegacyExternalStorage")){
       return [p1," android:requestLegacyExternalStorage=\"true\" ",p2].join("");
     }else{
       return [p1,p2].join("");

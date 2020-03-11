@@ -61,8 +61,6 @@
 @property (nonatomic) BOOL withData;
 
 -(void) handleFilesReceived:(NSURL *)uri;
-- (void) reset:(CDVInvokedUrlCommand*)command;
-- (void) setHandler:(CDVInvokedUrlCommand*)command;
 - (void) init:(CDVInvokedUrlCommand*)command;
 
 @end

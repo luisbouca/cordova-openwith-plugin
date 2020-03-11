@@ -55,16 +55,12 @@ public class OpenWithPlugin extends CordovaPlugin {
     onNewIntent(cordova.getActivity().getIntent());
     handlerContext = context;
 
-    return PluginResultSender.noResult(context,true);
+    final PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+    result.setKeepCallback(true);
+    context.sendPluginResult(result);
+    return true;
   }
 
-  @Override
-  public void onResume(boolean multitasking) {
-    super.onResume(multitasking);
-    Intent newIntent = cordova.getActivity().getIntent();
-    if (newIntent.getAction() == "android.intent.action.SEND")
-      onNewIntent(cordova.getActivity().getIntent());
-  }
 
   /**
    * This is called when a new intent is sent while the app is already opened.
@@ -101,7 +97,8 @@ public class OpenWithPlugin extends CordovaPlugin {
 
   /** Calls the javascript intent handlers. */
   private void sendIntentToJavascript(final JSONObject intent) {
-    final PluginResult result = new PluginResult(PluginResult.Status.OK, intent);
+    final String intentString = intent.toString();
+     final PluginResult result = new PluginResult(PluginResult.Status.OK, intentString);
 
     result.setKeepCallback(true);
     handlerContext.sendPluginResult(result);

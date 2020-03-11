@@ -13,6 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 /**
  * Handle serialization of Android objects ready to be sent to javascript.
  */
@@ -156,10 +159,17 @@ class Serializer {
     }
 
     final JSONObject json = new JSONObject();
+    final String uriString;
+    try {
+      uriString = URLDecoder.decode(uri.toString(),"UTF-8");
+      json.put("uri", uriString);
+    } catch (UnsupportedEncodingException e) {
+      json.put("uri", uri);
+    }
     final String type = contentResolver.getType(uri);
-    final String suggestedName = getNamefromURI(contentResolver, uri);
+    String suggestedName = getNamefromURI(contentResolver, uri);
+    suggestedName = suggestedName.substring(0,suggestedName.indexOf("."));
 
-    json.put("fileUrl", uri);
     json.put("type", type);
     json.put("name", suggestedName);
 

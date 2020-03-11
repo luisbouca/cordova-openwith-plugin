@@ -14,28 +14,6 @@ module.exports = {
    * @param {Boolean} return64Data (optional)
    */
   init: function init(successCallback,errorCallback,return64Data) {
-    exec(null, errorCallback, PLUGIN_NAME, 'init', [return64Data]);
-    exec(successCallback, null, PLUGIN_NAME, 'setHandler', []);
-  },
-  /**
-   * reset
-   *
-   * This method will remove the handler.
-   *
-   * @param {function} successCallback
-   * @param {function} errorCallback
-   */
-  reset: function reset(successCallback, errorCallback) {
-    exec(successCallback, errorCallback, PLUGIN_NAME, 'reset', []);
-  },
-  /**
-   * setHandler
-   *
-   * This method will set the handler to the successCallback function sent.
-   *
-   * @param {function} successCallback
-   */
-  setHandler: function setHandler(successCallback) {
-    exec(successCallback, null, PLUGIN_NAME, 'setHandler', []);
+    exec(successCallback, errorCallback, PLUGIN_NAME, 'init', [return64Data]);
   },
 };

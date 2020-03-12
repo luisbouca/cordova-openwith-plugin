@@ -31,7 +31,7 @@
 }
 
 -(void) processSavedFilesReceived{
-    for (NSURL* uri in storedFiles) {
+    for (NSString* uri in storedFiles) {
         [self handleFilesReceived:uri];
     }
     [storedFiles removeAllObjects];

@@ -22,18 +22,23 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
     pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self processSavedFilesReceived];
 }
 
 -(void) processSavedFilesReceived{
     for (NSURL* uri in storedFiles) {
         [self handleFilesReceived:uri];
     }
+    [storedFiles removeAllObjects];
 }
 
 - (void) handleFilesReceived:(NSURL *) uri{
     
     NSDictionary* result;
     if (self.handlerCallback == nil) {
+        if (storedFiles == nil) {
+            storedFiles = [NSMutableArray new];
+        }
         [storedFiles addObject:uri];
         return;
     }

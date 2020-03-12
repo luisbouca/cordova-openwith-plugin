@@ -53,11 +53,13 @@
 
 @interface OpenWithPlugin : CDVPlugin {
     NSString* _handlerCallback;
-    Boolean withData;
+    BOOL _withData;
+    NSMutableArray * storedFiles;
 }
 
 @property (nonatomic,retain) NSString* handlerCallback;
-@property (nonatomic) Boolean withData;
+@property (nonatomic) BOOL withData;
+@property (nonatomic) NSMutableArray * storedFiles;
 
 -(void) handleFilesReceived:(NSString *) path;
 - (void) init:(CDVInvokedUrlCommand*)command;

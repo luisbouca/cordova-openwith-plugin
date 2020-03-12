@@ -31,8 +31,8 @@
 }
 
 -(void) processSavedFilesReceived{
-    for (NSString* uri in storedFiles) {
-        [self handleFilesReceived:uri];
+    for (NSString* path in storedFiles) {
+        [self handleFilesReceived:path];
     }
     [storedFiles removeAllObjects];
 }
@@ -44,7 +44,7 @@
         if (storedFiles == nil) {
             storedFiles = [NSMutableArray new];
         }
-        [storedFiles addObject:uri];
+        [storedFiles addObject:path];
         return;
     }
     NSURL * uri = [NSURL fileURLWithPath:path];

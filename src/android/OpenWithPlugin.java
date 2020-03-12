@@ -52,8 +52,8 @@ public class OpenWithPlugin extends CordovaPlugin {
       return false;
     }
 
-    onNewIntent(cordova.getActivity().getIntent());
     handlerContext = context;
+    onNewIntent(cordova.getActivity().getIntent());
 
     final PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
     result.setKeepCallback(true);
@@ -71,9 +71,11 @@ public class OpenWithPlugin extends CordovaPlugin {
   @Override
   public void onNewIntent(final Intent intent) {
 
-    final JSONObject json = toJSONObject(intent);
-    if (json != null) {
-      pendingIntents.add(json);
+    if (intent.getAction() != "android.intent.action.MAIN") {
+      final JSONObject json = toJSONObject(intent);
+      if (json != null) {
+        pendingIntents.add(json);
+      }
     }
 
     processPendingIntents();

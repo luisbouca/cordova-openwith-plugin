@@ -6,7 +6,9 @@
 @implementation OpenWithPlugin
 
 @synthesize handlerCallback = _handlerCallback;
-@synthesize withData;
+@synthesize withData = _withData;
+@synthesize storedFiles = _storedFiles;
+
 
 
 // Initialize the plugin
@@ -20,12 +22,24 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
     pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self processSavedFilesReceived];
+}
+
+-(void) processSavedFilesReceived{
+    for (NSURL* uri in storedFiles) {
+        [self handleFilesReceived:uri];
+    }
+    [storedFiles removeAllObjects];
 }
 
 - (void) handleFilesReceived:(NSURL *) uri{
     
     NSDictionary* result;
     if (self.handlerCallback == nil) {
+        if (storedFiles == nil) {
+            storedFiles = [NSMutableArray new];
+        }
+        [storedFiles addObject:uri];
         return;
     }
     //TODO: Accept multiple files
@@ -41,7 +55,7 @@
         
     NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
       
-    if (withData) {
+    if (self.withData) {
         NSData *data = [NSData dataWithContentsOfURL:uri];
         if (![data isKindOfClass:NSData.class]) {
             NSLog(@"[checkForFileToShare] Data content is invalid");

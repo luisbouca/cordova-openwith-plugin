@@ -1,12 +1,19 @@
 #import <Cordova/CDV.h>
+#import "ShareViewController.h"
 #import "OpenWithPlugin.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 
 
+/*
+ * OpenWithPlugin implementation
+ */
+
 @implementation OpenWithPlugin
 
 @synthesize handlerCallback = _handlerCallback;
-@synthesize withData;
+@synthesize withData = _withData;
+@synthesize storedFiles = _storedFiles;
+
 
 
 // Initialize the plugin
@@ -20,28 +27,33 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
     pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self processSavedFilesReceived];
 }
 
-- (void) handleFilesReceived:(NSURL *) uri{
+-(void) processSavedFilesReceived{
+    for (NSString* path in storedFiles) {
+        [self handleFilesReceived:path];
+    }
+    [storedFiles removeAllObjects];
+}
+
+- (void) handleFilesReceived:(NSString *) path{
     
     NSDictionary* result;
     if (self.handlerCallback == nil) {
+        if (storedFiles == nil) {
+            storedFiles = [NSMutableArray new];
+        }
+        [storedFiles addObject:path];
         return;
     }
-    //TODO: Accept multiple files
-    //NSFileManager * fileManager = [NSFileManager defaultManager];
-    //NSError * error;
-    
-    //NSArray<NSString *> * paths = [fileManager contentsOfDirectoryAtPath:[[url path] stringByDeletingLastPathComponent] error:&error];
-    //if (error != nil) {
-    //    return;
-    //}
-    
+    NSURL * uri = [NSURL fileURLWithPath:path];
+
     NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
         
     NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
       
-    if (withData) {
+    if (self.withData) {
         NSData *data = [NSData dataWithContentsOfURL:uri];
         if (![data isKindOfClass:NSData.class]) {
             NSLog(@"[checkForFileToShare] Data content is invalid");
@@ -55,7 +67,6 @@
             return;
         }else{
             result = @{
-                @"action": @"SEND",
                 @"items": @[@{
                     @"base64": [data convertToBase64],
                     @"type": type,
@@ -66,7 +77,6 @@
         }
     }else{
         result = @{
-            @"action": @"SEND",
             @"items": @[@{
                 @"type": type,
                 @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
@@ -81,4 +91,3 @@
 }
 
 @end
-// vim: ts=4:sw=4:et

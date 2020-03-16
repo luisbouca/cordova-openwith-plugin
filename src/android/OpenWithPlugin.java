@@ -89,12 +89,16 @@ public class OpenWithPlugin extends CordovaPlugin {
     if (handlerContext == null) {
       return;
     }
+    JSONObject item = new JSONObject();
 
     for (int i = 0; i < pendingIntents.size(); i++) {
-      sendIntentToJavascript((JSONObject) pendingIntents.get(i));
+      item = (JSONObject) pendingIntents.get(i);
     }
-
+    
     pendingIntents.clear();
+    if(item != new JSONObject()) {
+      sendIntentToJavascript(item);
+    }
   }
 
   /** Calls the javascript intent handlers. */

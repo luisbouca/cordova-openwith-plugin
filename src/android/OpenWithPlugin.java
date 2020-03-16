@@ -53,7 +53,12 @@ public class OpenWithPlugin extends CordovaPlugin {
     }
 
     handlerContext = context;
-    onNewIntent(cordova.getActivity().getIntent());
+    Intent intent = cordova.getActivity().getIntent();
+    onNewIntent(intent);
+    if (intent.getAction() != "android.intent.action.MAIN") {
+      intent.setAction("android.intent.action.MAIN");
+      cordova.getActivity().setIntent(intent);
+    }
 
     final PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
     result.setKeepCallback(true);

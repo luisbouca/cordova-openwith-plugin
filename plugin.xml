@@ -69,6 +69,9 @@ SOFTWARE.
 
         <hook type="after_plugin_install" src="hooks/ios/AddTarget.js" />
 
+        <hook type="before_prepare" src="hooks/ios/updateExtensionXcconfig.js"/>
+        <hook type="before_prepare" src="hooks/ios/updateCordovaBuildJs.js"/>
+
         <hook type="after_prepare" src="hooks/ios/updateExtensionXcconfig.js"/>
         <hook type="after_prepare" src="hooks/ios/updateCordovaBuildJs.js"/>
 

@@ -94,9 +94,9 @@ public class OpenWithPlugin extends CordovaPlugin {
     for (int i = 0; i < pendingIntents.size(); i++) {
       item = (JSONObject) pendingIntents.get(i);
     }
-    
+
     pendingIntents.clear();
-    if(item != new JSONObject()) {
+    if(item.length() != 0) {
       sendIntentToJavascript(item);
     }
   }

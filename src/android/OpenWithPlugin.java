@@ -53,7 +53,12 @@ public class OpenWithPlugin extends CordovaPlugin {
     }
 
     handlerContext = context;
-    onNewIntent(cordova.getActivity().getIntent());
+    Intent intent = cordova.getActivity().getIntent();
+    onNewIntent(intent);
+    if (intent.getAction() != "android.intent.action.MAIN") {
+      intent.setAction("android.intent.action.MAIN");
+      cordova.getActivity().setIntent(intent);
+    }
 
     final PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
     result.setKeepCallback(true);
@@ -89,12 +94,16 @@ public class OpenWithPlugin extends CordovaPlugin {
     if (handlerContext == null) {
       return;
     }
+    JSONObject item = new JSONObject();
 
     for (int i = 0; i < pendingIntents.size(); i++) {
-      sendIntentToJavascript((JSONObject) pendingIntents.get(i));
+      item = (JSONObject) pendingIntents.get(i);
     }
 
     pendingIntents.clear();
+    if(item.length() != 0) {
+      sendIntentToJavascript(item);
+    }
   }
 
   /** Calls the javascript intent handlers. */

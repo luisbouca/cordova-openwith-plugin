@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.webkit.URLUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -159,31 +160,38 @@ class Serializer {
     }
 
     final JSONObject json = new JSONObject();
-    String uriString;
+    String uriString=uri.toString();
     //Traditional Storage
-    if (uri != null && "content".equals(uri.getScheme())) {
-      Cursor cursor = contentResolver.query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
-      cursor.moveToFirst();
-      uriString = cursor.getString(0);
-      cursor.close();
-    } else {
-      uriString = uri.getPath();
+    try {
+      if (uri != null && "content".equals(uri.getScheme())) {
+        Cursor cursor = contentResolver.query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
+        cursor.moveToFirst();
+        uriString = cursor.getString(0);
+        cursor.close();
+      }
+    }catch(Exception e){
+      Log.e("OpenWithPlugin","Could not extract path from uri!");
+
+      uriString = uriString.replace(uri.getScheme()+"://","");
     }
     //Scoped Storage
-    /*
-    uriString=uri.toString();
-    */
+
+    //uriString=uri.toString();
+
     //end Storage Duality
+
+    final String type = contentResolver.getType(uri);
+    String suggestedName = getNamefromURI(contentResolver, uri);
+    /*if(!uriString.contains(suggestedName)){
+      uriString = uriString + "/" + suggestedName;
+    }*/
+
     try {
       uriString = URLDecoder.decode(uriString,"UTF-8");
       json.put("uri", uriString);
     } catch (UnsupportedEncodingException e) {
       json.put("uri", uriString);
     }
-    final String type = contentResolver.getType(uri);
-    String suggestedName = getNamefromURI(contentResolver, uri);
-    suggestedName = suggestedName.substring(0,suggestedName.indexOf("."));
-
     json.put("type", type);
     json.put("name", suggestedName);
 

@@ -29,6 +29,7 @@ module.exports = function(context) {
 
     var ppDecoded = decode(getCordovaParameter("PROVISIONING_PROFILES",contents));
     var ppObject = JSON.parse(ppDecoded.replace(/'/g, "\""));
+    var Code_Sign = getCordovaParameter("CERTIFICATE_TYPE",contents);
 
     //we don't iterate the provisioning profiles here because we don't know  
     //yet how to add multiple provisioning profile info to the same xcconfig. 
@@ -38,6 +39,8 @@ module.exports = function(context) {
 
     var xcConfigNewContents = 'PRODUCT_BUNDLE_IDENTIFIER=' + key + '\n'
                             + 'PROVISIONING_PROFILE=' + value + '\n'
+                            + 'CODE_SIGN_IDENTITY=' + "\"" + Code_Sign + '"\n'
+                            + 'CODE_SIGN_IDENTITY[sdk=iphoneos*]=' + Code_Sign + '\n'
                             + 'DEVELOPMENT_TEAM=' + getCordovaParameter("DEVELOPMENT_TEAM",contents) + "\n"
                             + 'PRODUCT_DISPLAY_NAME=' + extensionName
 

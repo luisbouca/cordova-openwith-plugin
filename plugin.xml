@@ -72,7 +72,6 @@ SOFTWARE.
         <hook type="before_prepare" src="hooks/ios/updateExtensionXcconfig.js"/>
         <hook type="before_prepare" src="hooks/ios/updateCordovaBuildJs.js"/>
 
-        <hook type="after_prepare" src="hooks/ios/updateExtensionXcconfig.js"/>
         <hook type="after_prepare" src="hooks/ios/updateCordovaBuildJs.js"/>
 
         <hook type="before_plugin_uninstall" src="hooks/RemoveTarget.js" />

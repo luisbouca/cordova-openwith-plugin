@@ -302,7 +302,10 @@ module.exports = function (context) {
           if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
             var productName = buildSettingsObj['PRODUCT_NAME'];
             if (productName.indexOf('ShareExt') >= 0) {
-              buildSettingsObj['PROVISIONING_PROFILE'] = PROVISIONING_PROFILE;
+              if(!buildSettingsObj['GCC_PREPROCESSOR_DEFINITIONS'] || getCordovaParameter(configXml, 'DEBUG') == "True"){
+                buildSettingsObj['PROVISIONING_PROFILE'] = PROVISIONING_PROFILE;
+                console.log('Added PROVISIONING PROFILE for extension!');
+              }
               buildSettingsObj['DEVELOPMENT_TEAM'] = DEVELOPMENT_TEAM;
               buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = BUNDLE_ID;
               console.log('Added signing identities for extension!');

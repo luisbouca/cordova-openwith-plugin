@@ -20,10 +20,13 @@ This plugin defines a global ( `OpenWith` ) object which you can use to access t
 - Run the following command:
 
 ```shell
-    cordova plugin add https://github.com/OutSystemsExperts/cordova-openwith-plugin.git\
-  --variable ANDROID_MIME_TYPE="image/*" \
-  --variable IOS_URL_SCHEME=ccfoveaopenwithdemo \
-  --variable IOS_UNIFORM_TYPE_IDENTIFIER=public.image
+    cordova plugin add https://github.com/OutSystemsExperts/cordova-openwith-plugin.git \
+    --variable IOS_URL_SCHEME="com.outsystems.openwith" \
+    --variable PROVISIONING_PROFILES="{'com.luisbouca.outsystems.shareextension':'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'}" \
+    --variable PRODUCT_BUNDLE_IDENTIFIER="com.luisbouca.outsystems.shareextension" \
+    --variable EXTENSION_NAME="ShareExtension" \
+    --variable DEVELOPMENT_TEAM="00B000A09l" \
+    --variable CERTIFICATE_TYPE="Apple Development"
 ```
 
 | variable | example | notes |

@@ -51,29 +51,24 @@ function replacePreferencesInFile(filePath, preferences) {
 
 // Determine the full path to the app's xcode project file.
 function findXCodeproject(context, callback) {
-  fs.readdir(iosFolder(context), function(err, data) {
-    var projectFolder;
-    var projectName;
-    // Find the project folder by looking for *.xcodeproj
-    if (data && data.length) {
-      data.forEach(function(folder) {
-        if (folder.match(/\.xcodeproj$/)) {
-          projectFolder = path.join(iosFolder(context), folder);
-          projectName = path.basename(folder, '.xcodeproj');
-        }
-      });
-    }
+  var data = fs.readdirSync(iosFolder(context));
+  var projectFolder;
+  var projectName;
+  // Find the project folder by looking for *.xcodeproj
+  if (data && data.length) {
+    data.forEach(function(folder) {
+      if (folder.match(/\.xcodeproj$/)) {
+        projectFolder = path.join(iosFolder(context), folder);
+        projectName = path.basename(folder, '.xcodeproj');
+      }
+    });
+  }
 
-    if (!projectFolder || !projectName) {
-      throw redError('Could not find an .xcodeproj folder in: ' + iosFolder(context));
-    }
+  if (!projectFolder || !projectName) {
+    throw redError('Could not find an .xcodeproj folder in: ' + iosFolder(context));
+  }
 
-    if (err) {
-      throw redError(err);
-    }
-
-    callback(projectFolder, projectName);
-  });
+  callback(projectFolder, projectName);
 }
 
 // Determine the full path to the ios platform

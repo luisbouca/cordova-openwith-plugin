@@ -54,7 +54,7 @@ SOFTWARE.
             <array>
                 <dict>
                     <key>CFBundleURLName</key>
-                    <string>cordova.openwith.plugin.$IOS_URL_SCHEME.shareextension</string>
+                    <string>$IOS_URL_SCHEME.shareextension</string>
                     <key>CFBundleURLSchemes</key>
                     <array>
                         <string>$IOS_URL_SCHEME</string>

@@ -68,10 +68,6 @@ function findXCodeproject(context, callback) {
     throw redError('Could not find an .xcodeproj folder in: ' + iosFolder(context));
   }
 
-  if (err) {
-    throw redError(err);
-  }
-
   callback(projectFolder, projectName);
 }
 

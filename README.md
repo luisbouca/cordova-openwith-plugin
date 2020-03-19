@@ -9,12 +9,31 @@ This plugin defines a global ( `OpenWith` ) object which you can use to access t
  - Android
 
 
+
 ## Installation
+- Create a secondary provision profile for the extension with the bundle id <App_Bundle_ID>.shareextension
+
+- Add a Zip with the second provision profile for the extension with the name provisioning-profiles inside <App_Directory>/www/provisioning-profiles/provisioning-profiles.zip
+(Both provision profiles must use the same certificate)
+
+
 - Run the following command:
 
 ```shell
-    cordova plugin add https://github.com/OutSystemsExperts/cordova-openwith-plugin.git
-``` 
+    cordova plugin add https://github.com/OutSystemsExperts/cordova-openwith-plugin.git\
+  --variable ANDROID_MIME_TYPE="image/*" \
+  --variable IOS_URL_SCHEME=ccfoveaopenwithdemo \
+  --variable IOS_UNIFORM_TYPE_IDENTIFIER=public.image
+```
+
+| variable | example | notes |
+|---|---|---|
+| `IOS_URL_SCHEME` | com.outsystems.openwith | **iOS only** BundleIdentifier of the application |
+| `PROVISIONING_PROFILES` | {'com.outsystems.openwith.shareextension':'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'} | **iOS only** json with the bundle identifier of the extension as the name and the second provision profile UUID as the value |
+| `PRODUCT_BUNDLE_IDENTIFIER` | com.outsystems.openwith.shareextension | **iOS only** bundle identifier of the extension <YOUR_APP_BUNDLE_ID>.shareextension`. |
+| `EXTENSION_NAME` | ShareExtension | **iOS only** Name of the extension |
+| `DEVELOPMENT_TEAM` | 00B000A09l | **iOS only** Developer account teamId |
+| `CERTIFICATE_TYPE` | iPhone Distribution | **iOS only** Certificate type that you choose when you created the certificate|
 ---
 
 ## API Reference
@@ -30,15 +49,6 @@ Calling this method initializes the callbacks and sets options.
 | return64Data     | Boolean(optional)    | Whether to return base64 data of the file. defaults to false. |
  - [`.init(handlerCallback, errorCallback, return64Data)`](#init)
  
----
-### setHandler (`OpenWith.setHandler`)
-
-Calling this method sets the handler callback to the handlerCallback function.
-
-| Param             | Type      | Description |
-| ---               | ---       | --- |
-| handlerCallback   | [`Function`](#handlerCallback)  | Callback function called when a file is shared with the app. |
- - [`.setHandler(handlerCallback)`](#setHandler)
  
 
 <a name="handlerCallback"></a>
@@ -48,29 +58,6 @@ Signature:
 
 ```javascript
 function(fileData){
-    // ...
-};
-```
-
----
-### reset (`OpenWith.init`)
-
-Calling this method initializes the callbacks and sets options.
-
-| Param             | Type      | Description |
-| ---               | ---       | --- |
-| successCallback   | [`Function`](#successCallback)  | Callback function called when the reset. |
-| errorCallback     | [`Function`](#errorCallback)    | Callback function called when an error occurs. |
-| returnData     | Boolean    | Whether to return base64 data of the file. |
- - [`.init(successCallback, errorCallback, returnData)`](#init)
- 
-<a name="successCallback"></a>
-#### Success Callback
-
-Signature: 
-
-```javascript
-function(){
     // ...
 };
 ```
@@ -95,8 +82,6 @@ where `err` parameter is a JSON object:
 ```
 
 Possible error `code` values:
-
- - `HANDLER_NOT_SET` - Integer Value 1. Handler callback was not set.
  - `INVALID_DATA` - Integer Value 2. Invalid file data content.
 
 

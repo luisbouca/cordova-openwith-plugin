@@ -66,12 +66,6 @@
 - (void) warn:(NSString*)message { [self log:VERBOSITY_WARN message:message]; }
 - (void) error:(NSString*)message { [self log:VERBOSITY_ERROR message:message]; }
 
-- (void) setup {
-    self.userDefaults = [[NSUserDefaults alloc] initWithSuiteName:SHAREEXT_GROUP_IDENTIFIER];
-    self.verbosityLevel = [self.userDefaults integerForKey:@"verbosityLevel"];
-    [self debug:@"[setup]"];
-}
-
 - (BOOL) isContentValid {
     return YES;
 }
@@ -119,7 +113,6 @@
 
 - (void) viewDidAppear:(BOOL)animated {
     [self.view endEditing:YES];
-    [self setup];
     [self debug:@"[didSelectPost]"];
 
     // This is called after the user shares the file.
@@ -262,9 +255,6 @@
         }
         
     }
-
-    // Inform the host that we're done, so it un-blocks its UI.
-    [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
 }
 
 

@@ -111,6 +111,63 @@
     }
 }
 
+-(NSString *) copyFileToLocal:(NSURL *)uri{
+    
+    NSFileCoordinator *fileCoordinator = [[NSFileCoordinator alloc] initWithFilePresenter:nil];
+    
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
+    NSString * fileName = [[[uri absoluteString] lastPathComponent]stringByRemovingPercentEncoding];
+
+    NSArray *paths = NSSearchPathForDirectoriesInDomains
+    (NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+
+    NSString *filePath = [documentsDirectory stringByAppendingPathComponent: fileName];
+    NSLog(@"full path name: %@", filePath);
+
+    NSString *url = [NSString stringWithFormat:@"%@://shareextension//%@", SHAREEXT_URL_SCHEME,filePath];
+
+    [self openURL:[NSURL URLWithString:url]];
+    // check if file exists
+    if ([filemgr fileExistsAtPath: filePath] == YES){
+        NSLog(@"File exists");
+
+    }else {
+        //NSURL *uri = (NSURL*)item; // comes from Files app. For instance "file:///private/var/mobile/Library/Mobile%20Documents/com~apple~CloudDocs/test.rar"
+        NSURL *targetUrl = [NSURL fileURLWithPath:filePath];
+
+        NSError *coordinatorError = nil;
+        [uri startAccessingSecurityScopedResource];
+        [fileCoordinator coordinateReadingItemAtURL:uri options:NSFileCoordinatorReadingWithoutChanges error:&coordinatorError byAccessor:^(NSURL *newURL)
+        {
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            //if ([fileManager fileExistsAtPath: [nsUrl path]])
+            {
+                NSLog(@"Copy from %@ to %@", newURL, targetUrl);
+
+                NSError *copyError = nil;
+                [fileManager copyItemAtURL:newURL toURL:targetUrl error:&copyError];
+                if (!copyError)
+                {
+                    // OK
+                }
+                else
+                {
+                    NSLog(@"Files app error: %@", copyError);
+                }
+
+                [uri stopAccessingSecurityScopedResource];
+            }
+        }];
+    }
+    return filePath;
+    
+    
+    
+    
+}
+
 - (void) viewDidAppear:(BOOL)animated {
     [self.view endEditing:YES];
     [self debug:@"[didSelectPost]"];
@@ -123,10 +180,16 @@
             [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 NSString* path = [(NSURL*)item path];
+                
+                path = [self copyFileToLocal:[NSURL fileURLWithPath:path]];
                 path = [path stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
                 
+
                 // Emit a URL that opens the cordova app
                 NSString *url = [NSString stringWithFormat:@"%@://shareextension//%@", SHAREEXT_URL_SCHEME,path];
+                
+                
+                
 
                 // Not allowed:
                 // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];

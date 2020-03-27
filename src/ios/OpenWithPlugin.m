@@ -17,14 +17,8 @@
 
 
 - (void) setup{
-    _userDefaults = [[NSUserDefaults alloc] initWithSuiteName:[NSString stringWithFormat:@"group.%@.shareextension",[[NSBundle mainBundle]bundleIdentifier]]];
-    
-    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
-    NSString* storagePath = [libPath stringByDeletingLastPathComponent];    
-    
-    [_userDefaults registerDefaults:@{@"localPath":[[NSURL fileURLWithPath:storagePath] absoluteString],@"linkShared":@""}];
-    //[_userDefaults setObject:[[NSURL fileURLWithPath:storagePath] absoluteString] forKey:@"localPath"];
-    [_userDefaults synchronize];
+    NSString *suiteName =[NSString stringWithFormat:@"group.%@.shareextension",[[NSBundle mainBundle]bundleIdentifier]];
+    _userDefaults = [[NSUserDefaults alloc] initWithSuiteName:suiteName];
 }
 // Initialize the plugin
 - (void) init:(CDVInvokedUrlCommand*)command {
@@ -48,8 +42,31 @@
     [storedFiles removeAllObjects];
 }
 
+-(NSString *) saveFileToLocal:(NSData *)fileData withName:(NSString *)fileName{
+        
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
+    
+    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+    NSString* documentsDirectory = [libPath stringByDeletingLastPathComponent];
+    
+    documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
+    NSString *filePath = [documentsDirectory stringByAppendingPathComponent: fileName];
+    NSLog(@"full path name: %@", filePath);
+    NSError *error;
+    [fileData writeToFile:filePath options:NSDataWritingAtomic error:&error];
+    if (error == nil) {
+        
+        return [NSString stringWithFormat:@"%@ for path name: %@", filePath,error.localizedDescription];
+    }
+    return filePath;
+}
+
 - (void) handleFilesReceived:(NSDictionary *)values{
     if (values == nil) {
+        if(_userDefaults == nil){
+            [self setup];
+        }
         values = [_userDefaults dictionaryForKey:@"linkShared"];
     }
     NSDictionary* result;
@@ -60,16 +77,25 @@
         [storedFiles addObject:values];
         return;
     }
-      
+    NSString *base64 =[values objectForKey:@"base64"];
+    
+    NSData *data = [[NSData alloc] initWithBase64EncodedString:base64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    NSString * fileName = [[values objectForKey:@"uri"] lastPathComponent];
+    NSString *path = [[self saveFileToLocal:data withName:fileName]stringByReplacingOccurrencesOfString:@"file:" withString:@""];
     if (self.withData) {
         result = @{
-            @"items": @[values]
+            @"items": @[@{
+                @"type": [values objectForKey:@"type"],
+                @"uri": path,
+                @"name": [values objectForKey:@"name"],
+                @"base64": [values objectForKey:@"base64"]
+            }]
         };
     }else{
         result = @{
             @"items": @[@{
                 @"type": [values objectForKey:@"type"],
-                @"uri": [values objectForKey:@"uri"],
+                @"uri": path,
                 @"name": [values objectForKey:@"name"]
             }]
         };

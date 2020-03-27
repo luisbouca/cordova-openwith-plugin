@@ -74,6 +74,8 @@
 
 - (void) setup {
     self.userDefaults = [[NSUserDefaults alloc] initWithSuiteName:SHAREEXT_GROUP_IDENTIFIER];
+    [_userDefaults registerDefaults:@{@"linkShared":@{}}];
+    [_userDefaults synchronize];
     self.verbosityLevel = [self.userDefaults integerForKey:@"verbosityLevel"];
     [self debug:@"[setup]"];
 }

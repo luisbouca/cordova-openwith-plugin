@@ -13,11 +13,22 @@
 @synthesize handlerCallback = _handlerCallback;
 @synthesize withData = _withData;
 @synthesize storedFiles = _storedFiles;
+@synthesize userDefaults = _userDefaults;
 
 
-
+- (void) setup{
+    _userDefaults = [[NSUserDefaults alloc] initWithSuiteName:[NSString stringWithFormat:@"group.%@.shareextension",[[NSBundle mainBundle]bundleIdentifier]]];
+    
+    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+    NSString* storagePath = [libPath stringByDeletingLastPathComponent];    
+    
+    [_userDefaults registerDefaults:@{@"localPath":[[NSURL fileURLWithPath:storagePath] absoluteString],@"linkShared":@""}];
+    //[_userDefaults setObject:[[NSURL fileURLWithPath:storagePath] absoluteString] forKey:@"localPath"];
+    [_userDefaults synchronize];
+}
 // Initialize the plugin
 - (void) init:(CDVInvokedUrlCommand*)command {
+    
     if ([command.arguments count] <1) {
         self.withData = NO;
     }else{
@@ -31,56 +42,35 @@
 }
 
 -(void) processSavedFilesReceived{
-    for (NSString* path in storedFiles) {
-        [self handleFilesReceived:path];
+    for (NSDictionary* values in storedFiles) {
+        [self handleFilesReceived:values];
     }
     [storedFiles removeAllObjects];
 }
 
-- (void) handleFilesReceived:(NSString *) path{
-    
+- (void) handleFilesReceived:(NSDictionary *)values{
+    if (values == nil) {
+        values = [_userDefaults dictionaryForKey:@"linkShared"];
+    }
     NSDictionary* result;
     if (self.handlerCallback == nil) {
         if (storedFiles == nil) {
             storedFiles = [NSMutableArray new];
         }
-        [storedFiles addObject:path];
+        [storedFiles addObject:values];
         return;
     }
-    NSURL * uri = [NSURL fileURLWithPath:path];
-
-    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-        
-    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
       
     if (self.withData) {
-        NSData *data = [NSData dataWithContentsOfURL:uri];
-        if (![data isKindOfClass:NSData.class]) {
-            NSLog(@"[checkForFileToShare] Data content is invalid");
-            result = @{
-                @"ErrorCode":@"2",
-                @"ErrorMessage":@"Data content is invalid!"
-            };
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-            pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
-            return;
-        }else{
-            result = @{
-                @"items": @[@{
-                    @"base64": [data convertToBase64],
-                    @"type": type,
-                    @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
-                    @"name": name
-                }]
-            };
-        }
+        result = @{
+            @"items": @[values]
+        };
     }else{
         result = @{
             @"items": @[@{
-                @"type": type,
-                @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
-                @"name": name
+                @"type": [values objectForKey:@"type"],
+                @"uri": [values objectForKey:@"uri"],
+                @"name": [values objectForKey:@"name"]
             }]
         };
     }

@@ -13,11 +13,16 @@
 @synthesize handlerCallback = _handlerCallback;
 @synthesize withData = _withData;
 @synthesize storedFiles = _storedFiles;
+@synthesize userDefaults = _userDefaults;
 
 
-
+- (void) setup{
+    NSString *suiteName =[NSString stringWithFormat:@"group.%@.shareextension",[[NSBundle mainBundle]bundleIdentifier]];
+    _userDefaults = [[NSUserDefaults alloc] initWithSuiteName:suiteName];
+}
 // Initialize the plugin
 - (void) init:(CDVInvokedUrlCommand*)command {
+    
     if ([command.arguments count] <1) {
         self.withData = NO;
     }else{
@@ -31,56 +36,67 @@
 }
 
 -(void) processSavedFilesReceived{
-    for (NSString* path in storedFiles) {
-        [self handleFilesReceived:path];
+    for (NSDictionary* values in storedFiles) {
+        [self handleFilesReceived:values];
     }
     [storedFiles removeAllObjects];
 }
 
-- (void) handleFilesReceived:(NSString *) path{
+-(NSString *) saveFileToLocal:(NSData *)fileData withName:(NSString *)fileName{
+        
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
     
+    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+    NSString* documentsDirectory = [libPath stringByDeletingLastPathComponent];
+    
+    documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
+    NSString *filePath = [documentsDirectory stringByAppendingPathComponent: fileName];
+    NSLog(@"full path name: %@", filePath);
+    NSError *error;
+    [fileData writeToFile:filePath options:NSDataWritingAtomic error:&error];
+    if (error == nil) {
+        
+        return [NSString stringWithFormat:@"%@ for path name: %@", filePath,error.localizedDescription];
+    }
+    return filePath;
+}
+
+- (void) handleFilesReceived:(NSDictionary *)values{
+    if (values == nil) {
+        if(_userDefaults == nil){
+            [self setup];
+        }
+        values = [_userDefaults dictionaryForKey:@"linkShared"];
+    }
     NSDictionary* result;
     if (self.handlerCallback == nil) {
         if (storedFiles == nil) {
             storedFiles = [NSMutableArray new];
         }
-        [storedFiles addObject:path];
+        [storedFiles addObject:values];
         return;
     }
-    NSURL * uri = [NSURL fileURLWithPath:path];
-
-    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-        
-    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
-      
+    NSString *base64 =[values objectForKey:@"base64"];
+    
+    NSData *data = [[NSData alloc] initWithBase64EncodedString:base64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    NSString * fileName = [[values objectForKey:@"uri"] lastPathComponent];
+    NSString *path = [[self saveFileToLocal:data withName:fileName]stringByReplacingOccurrencesOfString:@"file:" withString:@""];
     if (self.withData) {
-        NSData *data = [NSData dataWithContentsOfURL:uri];
-        if (![data isKindOfClass:NSData.class]) {
-            NSLog(@"[checkForFileToShare] Data content is invalid");
-            result = @{
-                @"ErrorCode":@"2",
-                @"ErrorMessage":@"Data content is invalid!"
-            };
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-            pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
-            return;
-        }else{
-            result = @{
-                @"items": @[@{
-                    @"base64": [data convertToBase64],
-                    @"type": type,
-                    @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
-                    @"name": name
-                }]
-            };
-        }
+        result = @{
+            @"items": @[@{
+                @"type": [values objectForKey:@"type"],
+                @"uri": path,
+                @"name": [values objectForKey:@"name"],
+                @"base64": [values objectForKey:@"base64"]
+            }]
+        };
     }else{
         result = @{
             @"items": @[@{
-                @"type": type,
-                @"uri": [[uri absoluteString] stringByRemovingPercentEncoding],
-                @"name": name
+                @"type": [values objectForKey:@"type"],
+                @"uri": path,
+                @"name": [values objectForKey:@"name"]
             }]
         };
     }

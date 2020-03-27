@@ -25,8 +25,9 @@ public class OpenWithPlugin extends CordovaPlugin {
 
   /** Intents added before the handler has been registered */
   private ArrayList pendingIntents = new ArrayList(); //NOPMD
+    private Boolean withData = false;
 
-  /**
+    /**
    * Generic plugin command executor
    *
    * @param action
@@ -51,8 +52,13 @@ public class OpenWithPlugin extends CordovaPlugin {
       Log.w(PLUGIN_NAME, "init() -> invalidAction");
       return false;
     }
+    try {
+        withData = data.getBoolean(0);
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
 
-    handlerContext = context;
+      handlerContext = context;
     Intent intent = cordova.getActivity().getIntent();
     onNewIntent(intent);
     if (intent.getAction() != "android.intent.action.MAIN") {
@@ -122,7 +128,7 @@ public class OpenWithPlugin extends CordovaPlugin {
       final ContentResolver contentResolver = this.cordova
         .getActivity().getApplicationContext().getContentResolver();
 
-      return Serializer.toJSONObject(contentResolver, intent);
+      return Serializer.toJSONObject(contentResolver, intent,withData);
     } catch (JSONException e) {
       Log.e(PLUGIN_NAME, "Error converting intent to JSON: " + e.getMessage());
       Log.e(PLUGIN_NAME, Arrays.toString(e.getStackTrace()));

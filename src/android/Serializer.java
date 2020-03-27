@@ -7,14 +7,26 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.util.Base64;
+import android.util.Base64InputStream;
 import android.util.Log;
 import android.webkit.URLUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 
 /**
@@ -29,7 +41,8 @@ class Serializer {
    */
   public static JSONObject toJSONObject(
           final ContentResolver contentResolver,
-          final Intent intent)
+          final Intent intent,
+          final Boolean withData)
          throws JSONException
   {
     JSONArray items = null;
@@ -37,11 +50,11 @@ class Serializer {
     if ("text/plain".equals(intent.getType())) {
       items = itemsFromIntent(intent);
     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-      items = itemsFromClipData(contentResolver, intent.getClipData());
+      items = itemsFromClipData(contentResolver, intent.getClipData(),withData);
     }
 
     if (items == null || items.length() == 0) {
-      items = itemsFromExtras(contentResolver, intent.getExtras());
+      items = itemsFromExtras(contentResolver, intent.getExtras(),withData);
     }
 
     if (items == null) {
@@ -99,7 +112,8 @@ class Serializer {
    * Defaults to null. */
   public static JSONArray itemsFromClipData(
           final ContentResolver contentResolver,
-          final ClipData clipData)
+          final ClipData clipData,
+          final Boolean withData)
          throws JSONException
   {
     if (clipData != null) {
@@ -107,7 +121,7 @@ class Serializer {
       JSONObject[] items = new JSONObject[clipItemCount];
 
       for (int i = 0; i < clipItemCount; i++) {
-        items[i] = toJSONObject(contentResolver, clipData.getItemAt(i).getUri());
+        items[i] = toJSONObject(contentResolver, clipData.getItemAt(i).getUri(),withData);
       }
 
       return new JSONArray(items);
@@ -121,7 +135,8 @@ class Serializer {
    * See Intent.EXTRA_STREAM for details. */
   public static JSONArray itemsFromExtras(
           final ContentResolver contentResolver,
-          final Bundle extras)
+          final Bundle extras,
+          final Boolean withData)
          throws JSONException
   {
     if (extras == null) {
@@ -130,7 +145,8 @@ class Serializer {
 
     final JSONObject item = toJSONObject(
       contentResolver,
-      (Uri) extras.get(Intent.EXTRA_STREAM)
+      (Uri) extras.get(Intent.EXTRA_STREAM),
+            withData
     );
 
     if (item == null) {
@@ -152,7 +168,8 @@ class Serializer {
    */
   public static JSONObject toJSONObject(
           final ContentResolver contentResolver,
-          final Uri uri)
+          final Uri uri,
+          final Boolean withData)
          throws JSONException
   {
     if (uri == null) {
@@ -194,8 +211,54 @@ class Serializer {
     }
     json.put("type", type);
     json.put("name", suggestedName);
+    if (withData) {
+      try {
+        //URI fileuri = new URI(Uri.decode(uri.toString()));
+        URI fileuri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getFragment());
+        try {
+          String encoded = encodeFileToBase64Binary(contentResolver, uri);
+          if (encoded != "")
+            json.put("base64", encoded);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      } catch (URISyntaxException e) {
+        e.printStackTrace();
+      }
+    }
+
+
+
+
 
     return json;
+  }
+  public static byte[] readBytes(InputStream inputStream) throws IOException {
+
+    ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+    int bufferSize = 1024;
+    byte[] buffer = new byte[bufferSize];
+
+    int len = 0;
+    while ((len = inputStream.read(buffer)) != -1) {
+      byteBuffer.write(buffer, 0, len);
+    }
+
+    return byteBuffer.toByteArray();
+  }
+
+  private static String encodeFileToBase64Binary(ContentResolver contentResolver,Uri filePath) throws IOException,URISyntaxException {
+
+    try {
+      InputStream fileInputStream = contentResolver.openInputStream(filePath);
+      byte[] bytes = readBytes(fileInputStream);
+      String base64String = android.util.Base64.encodeToString(bytes, Base64.DEFAULT);
+      return base64String;
+    } catch (FileNotFoundException e) {
+      System.out.println("File Not Found.");
+      e.printStackTrace();
+    }
+    return "";
   }
 
   public static String getNamefromURI(

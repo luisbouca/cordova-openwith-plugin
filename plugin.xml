@@ -62,6 +62,16 @@ SOFTWARE.
                 </dict>
             </array>
         </config-file>
+        <config-file parent="com.apple.security.application-groups" target="*-Debug.plist">
+            <array>
+                <string>group.$IOS_URL_SCHEME.shareextension</string>
+            </array>
+          </config-file>
+      <config-file parent="com.apple.security.application-groups" target="*-Release.plist">
+         <array>
+            <string>group.$IOS_URL_SCHEME.shareextension</string>
+         </array>
+      </config-file>
         <hook type="before_plugin_install" src="hooks/npmInstall.js"/>
         <hook type="before_plugin_install" src="hooks/ios/copyAndUnzipProvisioningProfiles.js"/>
         <hook type="before_plugin_install" src="hooks/ios/CopyShareExtension.js" />

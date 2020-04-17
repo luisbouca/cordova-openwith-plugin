@@ -86,7 +86,7 @@
         result = @{
             @"items": @[@{
                 @"type": [values objectForKey:@"type"],
-                @"uri": path,
+                @"uri": [NSString stringWithFormat:@"file://%@",path],
                 @"name": [values objectForKey:@"name"],
                 @"base64": [values objectForKey:@"base64"]
             }]
@@ -95,7 +95,7 @@
         result = @{
             @"items": @[@{
                 @"type": [values objectForKey:@"type"],
-                @"uri": path,
+                @"uri": [NSString stringWithFormat:@"file://%@",path],
                 @"name": [values objectForKey:@"name"]
             }]
         };

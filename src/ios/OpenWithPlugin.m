@@ -35,6 +35,32 @@
     [self processSavedFilesReceived];
 }
 
+- (void) clearFolder:(CDVInvokedUrlCommand*) command{
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
+    
+    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+    NSString* documentsDirectory = [libPath stringByDeletingLastPathComponent];
+    
+    documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
+    
+    NSError * error;
+    BOOL success = false;
+    
+    for (NSString *file in [filemgr contentsOfDirectoryAtPath:documentsDirectory error:&error])
+    {
+        NSString *path = [documentsDirectory stringByAppendingPathComponent:file];
+        success = success && [filemgr removeItemAtPath:path error:&error];
+    }
+    if (success) {
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }else{
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
+}
+
 -(void) processSavedFilesReceived{
     for (NSDictionary* values in storedFiles) {
         [self handleFilesReceived:values];

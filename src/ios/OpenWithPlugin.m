@@ -71,15 +71,13 @@
     documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
         
     NSString *filePath = [self getAvailableFile:fileName inDir:documentsDirectory withData:fileData];
-    filePath = [documentsDirectory stringByAppendingPathComponent: fileName];
-    if ([filemgr fileExistsAtPath:filePath]) {
-        filePath = [documentsDirectory stringByAppendingPathComponent: fileName];
-    }
 
     if ([filemgr fileExistsAtPath:filePath]) {
         NSData * contents = [NSData dataWithContentsOfFile:filePath];
         if ([contents isEqualToData:fileData]) {
             return filePath;
+        }else{
+            return [NSString stringWithFormat:@"%@ for path name: %@",@"File with same name already added!", filePath];
         }
     }
     
@@ -87,7 +85,7 @@
     [fileData writeToFile:filePath options:NSDataWritingAtomic error:&error];
     if (error == nil) {
         
-        return [NSString stringWithFormat:@"%@ for path name: %@", filePath,error.localizedDescription];
+        return [NSString stringWithFormat:@"%@ for path name: %@",error.localizedDescription, filePath];
     }
     return filePath;
 }

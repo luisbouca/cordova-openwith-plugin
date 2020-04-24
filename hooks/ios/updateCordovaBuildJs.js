@@ -16,6 +16,16 @@ function replacer (match, p1, p2, p3, offset, string){
     }
 }
 
+function replacerProjectFile (match, p1, p2, p3, offset, string){
+  if(p2.includes("projectName")){
+    return [p1,p2,p3].join("");
+  }else{
+    var projectName = 'var projectName = fs.readdirSync(project_dir).find(d => d.includes(".xcworkspace")).replace(".xcworkspace", "");';
+    return [p1,projectName,p2,"&& entry.buildSettings.INFOPLIST_FILE.includes(projectName)",p3].join("");
+  }
+}
+
+
 module.exports = function(context) {
     
     log(
@@ -65,6 +75,18 @@ module.exports = function(context) {
     prepareJsContents = prepareJsContents.replace(regex,replacer);
 
     fs.writeFileSync(prepareJsPath,prepareJsContents);
+
+    var projectFileJsPath = path.join(
+      iosFolder,
+      'cordova/lib',
+      'projectFile.js'
+  )
+  var projectFileJsContent = fs.readFileSync(projectFileJsPath,'utf8');
+
+    var regexproj = /([\S|\s]*xcodeproj\.parseSync\(\);)([\S|\s]*entry\.buildSettings\.INFOPLIST_FILE)(;[\S|\s]*)/gms
+    projectFileJsContent = projectFileJsContent.replace(regexproj,replacerProjectFile);
+
+    fs.writeFileSync(projectFileJsPath,projectFileJsContent);
 
     log('Successfully edited build.js', 'success');
 }

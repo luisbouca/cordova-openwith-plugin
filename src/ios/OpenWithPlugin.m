@@ -144,7 +144,7 @@
     fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
     
     NSString *path = [self saveFileToLocal:data withName:fileName];
-    if (self.withData && [[values objectForKey:@"type"]isEqualToString:@"public.image"]) {
+    if (self.withData && ([[values objectForKey:@"type"]containsString:@"png"] || [[values objectForKey:@"type"]containsString:@"jpg"] || [[values objectForKey:@"type"]containsString:@"jpeg"] || [[values objectForKey:@"type"]containsString:@"heic"] || [[values objectForKey:@"type"]containsString:@"heif"])) {
         if ([data length]/1024.0f/1024.0f <1.0f) {
             base64 = @"";
         }

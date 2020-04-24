@@ -144,13 +144,16 @@
     fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
     
     NSString *path = [self saveFileToLocal:data withName:fileName];
-    if (self.withData) {
+    if (self.withData && [[values objectForKey:@"type"]isEqualToString:@"public.image"]) {
+        if ([data length]/1024.0f/1024.0f <1.0f) {
+            base64 = @"";
+        }
         result = @{
             @"items": @[@{
                 @"type": [values objectForKey:@"type"],
                 @"uri": path,
                 @"name": name,
-                @"base64": [values objectForKey:@"base64"]
+                @"base64": base64
             }]
         };
     }else{

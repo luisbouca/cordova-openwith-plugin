@@ -1,9 +1,9 @@
 {
-  "name": "cordova.openwith.plugin",
+  "name": "cordova-openwith-plugin",
   "version": "1.0.0",
   "description": "Cordova \"Open With\" plugin for iOS and Android",
   "cordova": {
-    "id": "cordova.openwith.plugin",
+    "id": "cordova-openwith-plugin",
     "platforms": [
       "android",
       "ios"

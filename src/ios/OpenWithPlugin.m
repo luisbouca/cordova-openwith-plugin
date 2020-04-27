@@ -136,12 +136,6 @@
     }
     NSArray *items = [self getParameters:values];
     
-    
-    //NSString *extension = [fileName pathExtension];
-    //fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
-    
-    
-    
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"items":items}];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];

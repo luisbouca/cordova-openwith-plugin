@@ -20,7 +20,7 @@
 @property (nonatomic) NSMutableArray * storedFiles;
 
 -(void)setup;
--(void) handleFilesReceived:(NSDictionary *) path;
+-(void) handleFilesReceived:(NSArray *) path;
 - (void) init:(CDVInvokedUrlCommand*)command;
 
 @end

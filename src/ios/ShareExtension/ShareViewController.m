@@ -121,18 +121,111 @@
     }
 }
 
+-(NSString *) getAvailableFile:(NSString*)currentFile inDir:(NSString*)directory withData:(NSData*)data {
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
+    
+    NSString *filePath = [directory stringByAppendingPathComponent: currentFile];
+    if ([filemgr fileExistsAtPath:filePath]) {
+        NSData * contents = [NSData dataWithContentsOfFile:filePath];
+        if ([contents isEqualToData:data]) {
+            return filePath;
+        }
+        NSString *extension = [currentFile pathExtension];
+        NSString *fileName = [currentFile stringByDeletingPathExtension];
+        fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
+        return [self getAvailableFile:fileName inDir:directory withData:data];
+    }
+    return filePath;
+}
+
+-(NSString *) saveFileToLocal:(NSData *)fileData withName:(NSString *)fileName{
+        
+    NSFileManager *filemgr;
+    filemgr = [NSFileManager defaultManager];
+    
+    NSString* sharedDirectory = [[filemgr containerURLForSecurityApplicationGroupIdentifier:SHAREEXT_GROUP_IDENTIFIER] path];
+    
+    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+    NSString* documentsDirectory = [libPath stringByDeletingLastPathComponent];
+    
+    documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
+        
+    NSString *filePath = [self getAvailableFile:fileName inDir:sharedDirectory withData:fileData];
+
+    if ([filemgr fileExistsAtPath:filePath]) {
+        NSData * contents = [NSData dataWithContentsOfFile:filePath];
+        if ([contents isEqualToData:fileData]) {
+            return filePath;
+        }else{
+            return [NSString stringWithFormat:@"%@ for path name: %@",@"File with same name already added!", filePath];
+        }
+    }
+    
+    NSError *error;
+    [fileData writeToFile:filePath options:NSDataWritingAtomic error:&error];
+    if (error != nil) {
+        
+        return [NSString stringWithFormat:@"%@ for path name: %@",error.localizedDescription, filePath];
+    }
+    return filePath;
+}
+
 - (void) viewDidAppear:(BOOL)animated {
     if(_userDefaults == nil){
         [self setup];
     }
     [self.view endEditing:YES];
     [self debug:@"[didSelectPost]"];
+    NSMutableArray * files = [[NSMutableArray alloc] init];
+    if (files == nil) {
+        files = [NSMutableArray new];
+    }
 
     // This is called after the user shares the file.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
-        
+        NSArray *types = @[@"public.image",@"public.file-url",@"public.url",@"public.text",@"public.audio"];
+        __block NSDictionary* file = @{};
+        for(NSString* type in types){
+            if ([itemProvider hasItemConformingToTypeIdentifier:type]) {
+                dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+                [itemProvider loadItemForTypeIdentifier:type options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
+                   
+                    if([(NSObject*)item isKindOfClass:[NSURL class]]){
+                        NSString* path = [(NSURL*)item path];
+                        
+                        NSURL * uri = [NSURL fileURLWithPath:path];
 
+                        NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
+                        
+                        NSData *data = [NSData dataWithContentsOfURL:uri];
+                        path = [self saveFileToLocal:data withName:name];
+                        
+                        
+                        file = @{
+                            @"type": type,
+                            @"uri": path
+                        };
+                        
+                        dispatch_semaphore_signal(sema);
+                    }
+                }];
+                if (![NSThread isMainThread]) {
+                    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+                } else {
+                    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                    }
+                }
+            }
+        }
+        if ([file count]>0) {
+            [files addObject:file];
+        }
+        /*
         if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+            __block NSDictionary* file = @{};
             [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 if([(NSObject*)item isKindOfClass:[NSURL class]]){
@@ -140,50 +233,30 @@
                     
                     NSURL * uri = [NSURL fileURLWithPath:path];
 
-                    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-                        
-                    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
+                    NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
                     
                     NSData *data = [NSData dataWithContentsOfURL:uri];
-                    NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+                    path = [self saveFileToLocal:data withName:name];
                     
                     
-                        NSDictionary* file = @{
-                            @"base64": base64,
-                            @"type": type,
-                            @"uri": path,
-                            @"name": name
-                        };
-                    [_userDefaults setObject:file forKey:@"linkShared"];
-                    [_userDefaults synchronize];
+                    file = @{
+                        @"type": @"public.image",
+                        @"uri": path
+                    };
                     
-                    
+                    dispatch_semaphore_signal(sema);
                 }
-
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
-                
-                
-                
-
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
-
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-                return;
             }];
+            if (![NSThread isMainThread]) {
+                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            } else {
+                while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                }
+            }
+            [files addObject:file];
         }else if([itemProvider hasItemConformingToTypeIdentifier:@"public.file-url"]){
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
             [itemProvider loadItemForTypeIdentifier:@"public.file-url" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 if([(NSObject*)item isKindOfClass:[NSURL class]]){
@@ -191,50 +264,29 @@
                     
                     NSURL * uri = [NSURL fileURLWithPath:path];
 
-                    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-                        
-                    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
+                    NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
                     
                     NSData *data = [NSData dataWithContentsOfURL:uri];
-                    NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+                    path = [self saveFileToLocal:data withName:name];
                     
                     
-                        NSDictionary* file = @{
-                            @"base64": base64,
-                            @"type": type,
-                            @"uri": [uri absoluteString],
-                            @"name": name
-                        };
-                        [_userDefaults setObject:file forKey:@"linkShared"];
-                        [_userDefaults synchronize];
-                    
-                    
+                    NSDictionary* file = @{
+                        @"type": @"public.file-url",
+                        @"uri": path
+                    };
+                    [files addObject:file];
+                    dispatch_semaphore_signal(sema);
                 }
-
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
-                
-                
-                
-
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
-
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-                return;
             }];
+            if (![NSThread isMainThread]) {
+                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            } else {
+                while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                }
+            }
         }else if([itemProvider hasItemConformingToTypeIdentifier:@"public.url"]){
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
             [itemProvider loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 if([(NSObject*)item isKindOfClass:[NSURL class]]){
@@ -242,50 +294,29 @@
                     
                     NSURL * uri = [NSURL fileURLWithPath:path];
 
-                    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-                        
-                    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
+                    NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
                     
                     NSData *data = [NSData dataWithContentsOfURL:uri];
-                    NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+                    path = [self saveFileToLocal:data withName:name];
                     
                     
-                        NSDictionary* file = @{
-                            @"base64": base64,
-                            @"type": type,
-                            @"uri": [uri absoluteString],
-                            @"name": name
-                        };
-                        [_userDefaults setObject:file forKey:@"linkShared"];
-                        [_userDefaults synchronize];
-                    
-                    
+                    NSDictionary* file = @{
+                        @"type": @"public.url",
+                        @"uri": path
+                    };
+                    [files addObject:file];
+                    dispatch_semaphore_signal(sema);
                 }
-
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
-                
-                
-                
-
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
-
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-                return;
             }];
+            if (![NSThread isMainThread]) {
+                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            } else {
+                while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                }
+            }
         }else if([itemProvider hasItemConformingToTypeIdentifier:@"public.text"]){
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
             [itemProvider loadItemForTypeIdentifier:@"public.text" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 if([(NSObject*)item isKindOfClass:[NSURL class]]){
@@ -293,50 +324,29 @@
                     
                     NSURL * uri = [NSURL fileURLWithPath:path];
 
-                    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-                        
-                    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
+                    NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
                     
                     NSData *data = [NSData dataWithContentsOfURL:uri];
-                    NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+                    path = [self saveFileToLocal:data withName:name];
                     
                     
-                        NSDictionary* file = @{
-                            @"base64": base64,
-                            @"type": type,
-                            @"uri": [uri absoluteString],
-                            @"name": name
-                        };
-                        [_userDefaults setObject:file forKey:@"linkShared"];
-                        [_userDefaults synchronize];
-                    
-                    
+                    NSDictionary* file = @{
+                        @"type": @"public.text",
+                        @"uri": path
+                    };
+                    [files addObject:file];
+                    dispatch_semaphore_signal(sema);
                 }
-
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
-                
-                
-                
-
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
-
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-                return;
             }];
+            if (![NSThread isMainThread]) {
+                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            } else {
+                while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                }
+            }
         }else if([itemProvider hasItemConformingToTypeIdentifier:@"public.audio"]){
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
             [itemProvider loadItemForTypeIdentifier:@"public.audio" options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                
                 if([(NSObject*)item isKindOfClass:[NSURL class]]){
@@ -344,55 +354,44 @@
                     
                     NSURL * uri = [NSURL fileURLWithPath:path];
 
-                    NSString * type = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[uri pathExtension],NULL);
-                        
-                    NSString *name = [[[[uri absoluteString] lastPathComponent] stringByDeletingPathExtension] stringByRemovingPercentEncoding];
+                    NSString *name = [[[uri absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
                     
                     NSData *data = [NSData dataWithContentsOfURL:uri];
-                    NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+                    path = [self saveFileToLocal:data withName:name];
                     
                     
-                        NSDictionary* file = @{
-                            @"base64": base64,
-                            @"type": type,
-                            @"uri": [uri absoluteString],
-                            @"name": name
-                        };
-                        [_userDefaults setObject:file forKey:@"linkShared"];
-                        [_userDefaults synchronize];
-                    
-                    
+                    NSDictionary* file = @{
+                        @"type": @"public.audio",
+                        @"uri": path
+                    };
+                    [files addObject:file];
+                    dispatch_semaphore_signal(sema);
                 }
-
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
-                
-                
-                
-
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
-
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-                return;
             }];
+            if (![NSThread isMainThread]) {
+                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            } else {
+                while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+                }
+            }
         }else{
             [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
             return;
-        }
+        }*/
         
     }
+
+    // Emit a URL that opens the cordova app
+    NSString *url = [NSString stringWithFormat:@"%@://shareextension", SHAREEXT_URL_SCHEME];
+    
+    [_userDefaults setObject:files forKey:@"linksShared"];
+    [_userDefaults synchronize];
+    
+    [self openURL:[NSURL URLWithString:url]];
+
+    // Inform the host that we're done, so it un-blocks its UI.
+    [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
 }
 
 

@@ -62,66 +62,69 @@
 }
 
 -(void) processSavedFilesReceived{
-    for (NSDictionary* values in storedFiles) {
+    for (NSArray* values in storedFiles) {
         [self handleFilesReceived:values];
     }
     [storedFiles removeAllObjects];
 }
+- (NSData *)thumbnailWithContentsOfURL:(NSURL *)URL maxPixelSize:(CGFloat)maxPixelSize
+{
+    CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)URL, NULL);
+    NSAssert(imageSource != NULL, @"cannot create image source");
 
--(NSString *) getAvailableFile:(NSString*)currentFile inDir:(NSString*)directory withData:(NSData*)data {
-    NSFileManager *filemgr;
-    filemgr = [NSFileManager defaultManager];
-    
-    NSString *filePath = [directory stringByAppendingPathComponent: currentFile];
-    if ([filemgr fileExistsAtPath:filePath]) {
-        NSData * contents = [NSData dataWithContentsOfFile:filePath];
-        if ([contents isEqualToData:data]) {
-            return filePath;
-        }
-        NSString *extension = [currentFile pathExtension];
-        NSString *fileName = [currentFile stringByDeletingPathExtension];
-        fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
-        return [self getAvailableFile:fileName inDir:directory withData:data];
-    }
-    return filePath;
+    NSDictionary *imageOptions = @{
+        (NSString const *)kCGImageSourceCreateThumbnailFromImageIfAbsent : (NSNumber const *)kCFBooleanTrue,
+        (NSString const *)kCGImageSourceThumbnailMaxPixelSize            : @(maxPixelSize),
+        (NSString const *)kCGImageSourceCreateThumbnailWithTransform     : (NSNumber const *)kCFBooleanTrue
+    };
+    CGImageRef thumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, (__bridge CFDictionaryRef)imageOptions);
+    CFRelease(imageSource);
+
+    UIImage *result = [[UIImage alloc] initWithCGImage:thumbnail];
+    CGImageRelease(thumbnail);
+
+    return UIImagePNGRepresentation(result);
 }
 
--(NSString *) saveFileToLocal:(NSData *)fileData withName:(NSString *)fileName{
-        
-    NSFileManager *filemgr;
-    filemgr = [NSFileManager defaultManager];
-    
-    NSString* libPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
-    NSString* documentsDirectory = [libPath stringByDeletingLastPathComponent];
-    
-    documentsDirectory = [documentsDirectory stringByAppendingPathComponent: @"tmp/Shareextension"];
-        
-    NSString *filePath = [self getAvailableFile:fileName inDir:documentsDirectory withData:fileData];
+-(NSData *)getThumbnailOfPicture:(NSString*) path{
+    NSURL* url = [NSURL fileURLWithPath:path];
+    return [self thumbnailWithContentsOfURL:url maxPixelSize:1024.0f];
+}
 
-    if ([filemgr fileExistsAtPath:filePath]) {
-        NSData * contents = [NSData dataWithContentsOfFile:filePath];
-        if ([contents isEqualToData:fileData]) {
-            return filePath;
+-(NSArray*)getParameters:(NSArray*)files{
+    NSMutableArray *result = [[NSMutableArray alloc] init];
+    for (NSDictionary *values in files) {
+        NSString * path = [values objectForKey:@"uri"];
+        NSString * fileName = [path lastPathComponent];
+        fileName = [fileName stringByDeletingPathExtension];
+        fileName = [fileName stringByRemovingPercentEncoding];
+        
+        if (self.withData && [[values objectForKey:@"type"] isEqualToString:@"public.image"]) {
+
+            NSData *data = [self getThumbnailOfPicture:path];
+            NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+            [result addObject:@{
+                @"type": (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[[path lastPathComponent] pathExtension],NULL),
+                @"uri": path,
+                @"name": fileName,
+                @"base64": base64}];
         }else{
-            return [NSString stringWithFormat:@"%@ for path name: %@",@"File with same name already added!", filePath];
+            [result addObject:@{
+            @"type": (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[[path lastPathComponent] pathExtension],NULL),
+            @"uri": path,
+            @"name": fileName}];
         }
     }
+    return result;
     
-    NSError *error;
-    [fileData writeToFile:filePath options:NSDataWritingAtomic error:&error];
-    if (error == nil) {
-        
-        return [NSString stringWithFormat:@"%@ for path name: %@",error.localizedDescription, filePath];
-    }
-    return filePath;
 }
 
-- (void) handleFilesReceived:(NSDictionary *)values{
+- (void) handleFilesReceived:(NSArray *)values{
     if (values == nil) {
         if(_userDefaults == nil){
             [self setup];
         }
-        values = [_userDefaults dictionaryForKey:@"linkShared"];
+        values = [_userDefaults arrayForKey:@"linksShared"];
     }
     NSDictionary* result;
     if (self.handlerCallback == nil) {
@@ -131,42 +134,15 @@
         [storedFiles addObject:values];
         return;
     }
-    NSString *base64 =[values objectForKey:@"base64"];
-    
-    NSData *data = [[NSData alloc] initWithBase64EncodedString:base64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
-    NSString * fileName = [[values objectForKey:@"uri"] lastPathComponent];
+    NSArray *items = [self getParameters:values];
     
     
-    NSString *extension = [fileName pathExtension];
-    fileName = [fileName stringByDeletingPathExtension];
-    fileName = [fileName stringByRemovingPercentEncoding];
-    NSString * name =fileName;
-    fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
+    //NSString *extension = [fileName pathExtension];
+    //fileName = [NSString stringWithFormat:@"%@0.%@",fileName,extension];
     
-    NSString *path = [self saveFileToLocal:data withName:fileName];
-    if (self.withData && ([[values objectForKey:@"type"]containsString:@"png"] || [[values objectForKey:@"type"]containsString:@"jpg"] || [[values objectForKey:@"type"]containsString:@"jpeg"] || [[values objectForKey:@"type"]containsString:@"heic"] || [[values objectForKey:@"type"]containsString:@"heif"])) {
-        if ([data length]/1024.0f/1024.0f <1.0f) {
-            base64 = @"";
-        }
-        result = @{
-            @"items": @[@{
-                @"type": [values objectForKey:@"type"],
-                @"uri": path,
-                @"name": name,
-                @"base64": base64
-            }]
-        };
-    }else{
-        result = @{
-            @"items": @[@{
-                @"type": [values objectForKey:@"type"],
-                @"uri": path,
-                @"name": name
-            }]
-        };
-    }
     
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+    
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"items":items}];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
 }

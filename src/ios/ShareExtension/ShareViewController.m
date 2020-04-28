@@ -196,9 +196,13 @@
                         NSData *data = [NSData dataWithContentsOfURL:uri];
                         path = [self saveFileToLocal:data withName:name];
                         
-                        
+                        NSString *extension = (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[[path lastPathComponent] pathExtension],NULL);
+                        NSString *mytype = type;
+                        if (UTTypeConformsTo(CFBridgingRetain(extension), kUTTypeImage)) {
+                            mytype = @"public.image";
+                        }
                         file = @{
-                            @"type": type,
+                            @"type": mytype,
                             @"uri": path
                         };
                         

@@ -67,28 +67,25 @@
     }
     [storedFiles removeAllObjects];
 }
-- (NSData *)thumbnailWithContentsOfURL:(NSURL *)URL maxPixelSize:(CGFloat)maxPixelSize
-{
-    CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)URL, NULL);
-    NSAssert(imageSource != NULL, @"cannot create image source");
 
-    NSDictionary *imageOptions = @{
-        (NSString const *)kCGImageSourceCreateThumbnailFromImageIfAbsent : (NSNumber const *)kCFBooleanTrue,
-        (NSString const *)kCGImageSourceThumbnailMaxPixelSize            : @(maxPixelSize),
-        (NSString const *)kCGImageSourceCreateThumbnailWithTransform     : (NSNumber const *)kCFBooleanTrue
+-(NSData *)getThumbnailOfPicture:(NSString*) path maxPixelSize:(CGFloat)maxPixelSize{
+    UIImage *image = [UIImage imageWithContentsOfFile:path];
+    NSData *imageData = UIImagePNGRepresentation(image);
+    CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
+    NSAssert(src != NULL, @"cannot create image source");
+    
+    NSDictionary *options = @{
+         (NSString const *)kCGImageSourceCreateThumbnailFromImageIfAbsent : (NSNumber const *)kCFBooleanTrue,
+         (NSString const *)kCGImageSourceThumbnailMaxPixelSize            : @(maxPixelSize),
+         (NSString const *)kCGImageSourceCreateThumbnailWithTransform     : (NSNumber const *)kCFBooleanTrue
+                                                         
     };
-    CGImageRef thumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, (__bridge CFDictionaryRef)imageOptions);
-    CFRelease(imageSource);
-
+    
+    CGImageRef thumbnail = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef)options);
+    CFRelease(src);
     UIImage *result = [[UIImage alloc] initWithCGImage:thumbnail];
     CGImageRelease(thumbnail);
-
     return UIImagePNGRepresentation(result);
-}
-
--(NSData *)getThumbnailOfPicture:(NSString*) path{
-    NSURL* url = [NSURL fileURLWithPath:path];
-    return [self thumbnailWithContentsOfURL:url maxPixelSize:1024.0f];
 }
 
 -(NSArray*)getParameters:(NSArray*)files{
@@ -100,8 +97,8 @@
         fileName = [fileName stringByRemovingPercentEncoding];
         
         if (self.withData && [[values objectForKey:@"type"] isEqualToString:@"public.image"]) {
-
-            NSData *data = [self getThumbnailOfPicture:path];
+            
+            NSData *data = [self getThumbnailOfPicture:path maxPixelSize:1024.0f];
             NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
             [result addObject:@{
                 @"type": (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[[path lastPathComponent] pathExtension],NULL),
@@ -135,6 +132,7 @@
         return;
     }
     NSArray *items = [self getParameters:values];
+    
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{@"items":items}];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];

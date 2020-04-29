@@ -96,9 +96,13 @@
         fileName = [fileName stringByDeletingPathExtension];
         fileName = [fileName stringByRemovingPercentEncoding];
         
-        if (self.withData && [[values objectForKey:@"type"] isEqualToString:@"public.image"]) {
-            
-            NSData *data = [self getThumbnailOfPicture:path maxPixelSize:1024.0f];
+        if (self.withData) {
+            NSData *data;
+            if([[values objectForKey:@"type"] isEqualToString:@"public.image"]){
+                data = [self getThumbnailOfPicture:path maxPixelSize:1024.0f];
+            }else{
+                data = [NSData dataWithContentsOfFile:path];
+            }
             NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
             [result addObject:@{
                 @"type": (__bridge NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,(__bridge CFStringRef)[[path lastPathComponent] pathExtension],NULL),

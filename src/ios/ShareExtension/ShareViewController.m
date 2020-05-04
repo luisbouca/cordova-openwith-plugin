@@ -35,11 +35,11 @@
 @interface ShareViewController : SLComposeServiceViewController {
     int _verbosityLevel;
     NSUserDefaults *_userDefaults;
-    NSString *_backURL;
+    Boolean _timeout;
 }
 @property (nonatomic) int verbosityLevel;
 @property (nonatomic,retain) NSUserDefaults *userDefaults;
-@property (nonatomic,retain) NSString *backURL;
+@property (nonatomic) Boolean timeout;
 @end
 
 /*
@@ -55,7 +55,7 @@
 
 @synthesize verbosityLevel = _verbosityLevel;
 @synthesize userDefaults = _userDefaults;
-@synthesize backURL = _backURL;
+@synthesize timeout = _timeout;
 
 - (void) log:(int)level message:(NSString*)message {
     if (level >= self.verbosityLevel) {
@@ -176,6 +176,7 @@
     if (files == nil) {
         files = [NSMutableArray new];
     }
+    _timeout = YES;
 
     // This is called after the user shares the file.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
@@ -206,13 +207,19 @@
                             @"uri": path
                         };
                         
-                        dispatch_semaphore_signal(sema);
                     }
+                    dispatch_semaphore_signal(sema);
                 }];
                 if (![NSThread isMainThread]) {
                     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
                 } else {
-                    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                    [self flipTimeout];
+                    [NSTimer scheduledTimerWithTimeInterval:5.0
+                    target:self
+                    selector:@selector(flipTimeout)
+                    userInfo:nil
+                    repeats:NO];
+                    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW) && [self timeout]) {
                         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
                     }
                 }
@@ -234,6 +241,10 @@
 
     // Inform the host that we're done, so it un-blocks its UI.
     [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+}
+
+- (void) flipTimeout{
+    _timeout = ![self timeout];
 }
 
 

@@ -86,11 +86,20 @@ module.exports = function(context) {
     }
 
     var targetFolder = path.join(
-      '/Users',
-      require("os").userInfo().username,
+      require("os").homedir(),
       'Library/MobileDevice/Provisioning Profiles'
     )
     console.log("target folder", targetFolder);
+
+    if (!fs.existsSync(targetFolder)) {
+      console.log(`Creating dir ${targetFolder}`);
+      fs.mkdirSync(targetFolder, { recursive: true });
+    } else {
+      console.log(`Dir ${targetFolder} already exists`);
+    }
+
+    if (!fs.existsSync(targetFolder)) throw `Failed to create ${targetFolder}`
+    
     // Copy provisioning profiles
     copyFolderRecursiveSync(
       srcFolder,

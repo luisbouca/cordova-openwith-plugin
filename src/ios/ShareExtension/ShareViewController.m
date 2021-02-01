@@ -176,7 +176,6 @@
     if (files == nil) {
         files = [NSMutableArray new];
     }
-    _timeout = YES;
 
     // This is called after the user shares the file.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
@@ -213,13 +212,13 @@
                 if (![NSThread isMainThread]) {
                     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
                 } else {
-                    [self flipTimeout];
+                    _timeout = YES;
                     [NSTimer scheduledTimerWithTimeInterval:5.0
                     target:self
                     selector:@selector(flipTimeout)
                     userInfo:nil
                     repeats:NO];
-                    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW) && [self timeout]) {
+                    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW) && _timeout) {
                         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
                     }
                 }
@@ -244,7 +243,7 @@
 }
 
 - (void) flipTimeout{
-    _timeout = ![self timeout];
+    _timeout = !_timeout;
 }
 
 

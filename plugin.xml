@@ -122,6 +122,7 @@ SOFTWARE.
     </config-file>
 
 
+    <hook type="before_plugin_install" src="hooks/npmInstall.js"/>
     <hook type="before_prepare" src="hooks/android/manifest-LegacyStorage.js" />
 
     <hook type="before_prepare" src="hooks/android/manifest-SingleInstance.js" />

@@ -33,11 +33,6 @@
     "adm-zip": "^0.4.13",
     "decode-html": "^2.0.0",
     "elementtree": "^0.1.7",
-    "file-system": "^2.2.2",
-    "os": "^0.1.1",
-    "path": "^0.12.7",
-    "plist": "^2.1.0",
-    "q": "^1.5.1",
-    "xcode": "git+https://github.com/apache/cordova-node-xcode.git"
+    "q": "^1.5.1"
   }
 }

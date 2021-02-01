@@ -11,10 +11,11 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options{
-    NSLog(@"url received!");
-    OpenWithPlugin *openWithHandler = [self.viewController getCommandInstance:@"OpenWithPlugin"];
-   
-    [openWithHandler handleFilesReceived:nil];
+
+    if([url.absoluteString rangeOfString:@"shareextension"].location != NSNotFound){
+        OpenWithPlugin *openWithHandler = [self.viewController getCommandInstance:@"OpenWithPlugin"];
+        [openWithHandler handleFilesReceived:nil];
+    }
     return true;
 }
 

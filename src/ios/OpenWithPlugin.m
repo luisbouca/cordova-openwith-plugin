@@ -129,9 +129,11 @@
         [_userDefaults removeObjectForKey:@"linksShared"];
         [_userDefaults synchronize];
         if(values == nil){
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could Not retrieve Shared Files Information!"];
-            pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
+            if (self.handlerCallback == nil) {
+                CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could Not retrieve Shared Files Information!"];
+                pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
+            }
             return;
         }
     }

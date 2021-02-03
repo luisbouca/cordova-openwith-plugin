@@ -31,6 +31,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var {isCordovaAbove} = require("../utils");
 const PLUGIN_ID = "cordova-openwith-plugin";
 
 function redError(message) {
@@ -116,8 +117,13 @@ function findXCodeproject(context, callback) {
 }
 
 module.exports = function(context) {
-  const Q = context.requireCordovaModule('q');
-  var deferral = new Q.defer();
+  var deferral;
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (cordovaAbove8) {
+      deferral = require('q').defer();
+    } else {
+      deferral = context.requireCordovaModule("q").defer();
+    }
 
   findXCodeproject(context, function(projectFolder, projectName) {
 

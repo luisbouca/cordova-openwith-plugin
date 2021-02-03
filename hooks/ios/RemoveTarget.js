@@ -34,6 +34,7 @@ const BUNDLE_SUFFIX = ".shareextension";
 
 var fs = require('fs');
 var path = require('path');
+var {isCordovaAbove} = require("../utils");
 
 function redError(message) {
     return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
@@ -125,8 +126,13 @@ console.log('Removing target "' + PLUGIN_ID + '/ShareExtension" to XCode project
 
 module.exports = function (context) {
 
-  const Q = context.requireCordovaModule('q');
-  var deferral = new Q.defer();
+  var deferral;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    deferral = require('q').defer();
+  } else {
+    deferral = context.requireCordovaModule("q").defer();
+  }
 
   findXCodeproject(context, function(projectFolder, projectName) {
 

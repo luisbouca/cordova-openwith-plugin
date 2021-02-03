@@ -34,6 +34,7 @@ const BUNDLE_SUFFIX = '.shareextension';
 
 var fs = require('fs');
 var path = require('path');
+var {isCordovaAbove} = require("../utils");
 
 function redError(message) {
     return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
@@ -204,8 +205,13 @@ function printShareExtensionFiles(files) {
 console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
 
 module.exports = function (context) {
-  const Q = context.requireCordovaModule('q');
-  var deferral = new Q.defer();
+  var deferral;
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (cordovaAbove8) {
+      deferral = require('q').defer();
+    } else {
+      deferral = context.requireCordovaModule("q").defer();
+    }
 
   // if (context.opts.cordova.platforms.indexOf('ios') < 0) {
   //   log('You have to add the ios platform before adding this plugin!', 'error');

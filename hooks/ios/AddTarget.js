@@ -109,7 +109,13 @@ function getCordovaParameter(configXml, variableName) {
 // }
 
 function parsePbxProject(context, pbxProjectPath) {
-  var xcode = context.requireCordovaModule('xcode');
+  var xcode;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    xcode = require('xcode');
+  } else {
+    xcode = context.requireCordovaModule("xcode");
+  }
   console.log('    Parsing existing project at location: ' + pbxProjectPath + '...');
   var pbxProject;
   if (context.opts.cordova.project) {
@@ -140,7 +146,13 @@ function projectPlistPath(context, projectName) {
 }
 
 function projectPlistJson(context, projectName) {
-  var plist = context.requireCordovaModule('plist');
+  var plist;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    plist = require('plist');
+  } else {
+    plist = context.requireCordovaModule("plist");
+  }
   var path = projectPlistPath(context, projectName);
   return plist.parse(fs.readFileSync(path, 'utf8'));
 }

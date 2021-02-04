@@ -13,7 +13,8 @@ module.exports = {
             platform: "ios",
             wwwFolder: "www"
         },
-        zipExtension: ".zip"
+        zipExtension: ".zip",
+        pluginName:"cordova-openwith-plugin"
     },
 
     getCordovaParameter: function (variableName, contents) {
@@ -27,12 +28,20 @@ module.exports = {
         return variable;
     },
     getPreferenceValue: function(config, name) {
-        var value = config.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
-        if(value && value[1]) {
-            return value[1];
-        } else {
-            return null;
+        var cordovaAbove8 = isCordovaAbove(context, 8);
+        var value
+        if (cordovaAbove8) {
+            value = JSON.parse(config)[pluginName]["variables"][name];
+            return value;
+        }else{
+            value = config.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
+            if(value && value[1]) {
+                return value[1];
+            } else {
+                return null;
+            }
         }
+        
     },
     log: function(logString, type) {
         var prefix;

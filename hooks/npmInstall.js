@@ -1,22 +1,21 @@
 var child_process = require('child_process');
 
 module.exports = function (context) {
-    var deferral;
     var cordovaAbove8 = isCordovaAbove(context, 8);
-    if (cordovaAbove8) {
-      deferral = require('q').defer();
-    } else {
-      deferral = context.requireCordovaModule("q").defer();
+    if (!cordovaAbove8) {
+      var deferral = context.requireCordovaModule("q").defer();
+      child_process.exec('npm install', {cwd:__dirname},
+        function (error) {
+          if (error !== null) {
+            console.log('exec error: ' + error);
+            deferral.reject('npm installation failed');
+          }
+          deferral.resolve();
+      });
+
+      return deferral.promise;
     }
+    return;
 
-	child_process.exec('npm install', {cwd:__dirname},
-		function (error) {
-			if (error !== null) {
-			  console.log('exec error: ' + error);
-			  deferral.reject('npm installation failed');
-			}
-			deferral.resolve();
-	});
-
-  return deferral.promise;
+	
 };

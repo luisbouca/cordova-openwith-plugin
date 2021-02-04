@@ -15,12 +15,19 @@ module.exports = function(context) {
      var iosFolder = context.opts.cordova.project
     ? context.opts.cordova.project.root
     : path.join(context.opts.projectRoot, 'platforms/ios/');
-    
-    var contents = fs.readFileSync(
-        path.join(context.opts.projectRoot, 'config.xml'),
-        'utf-8'
-    );
-
+    var contents;
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (cordovaAbove8) {
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot,"plugins", 'fetch.json'),
+            'utf-8'
+        );
+    }else{
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot, 'config.xml'),
+            'utf-8'
+        );
+    }
     var extensionName = getCordovaParameter("EXTENSION_NAME",contents);
     var xcConfigPath = path.join(iosFolder, extensionName.replace(" ",""), 'Config.xcconfig');
     log(xcConfigPath,"start");

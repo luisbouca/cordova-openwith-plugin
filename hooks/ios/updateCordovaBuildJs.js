@@ -1,7 +1,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var {getCordovaParameter, log} = require('../utils');
+var {getCordovaParameter,isCordovaAbove, log} = require('../utils');
 var decode = require('decode-html');
 
 function escapeRegExp(string) {

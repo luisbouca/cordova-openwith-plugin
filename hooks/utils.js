@@ -77,7 +77,7 @@ module.exports = {
         return parseInt(sp[0]) >= version;
     },
     getAppId: function(context) {
-        var cordovaAbove8 = isCordovaAbove(context, 8);
+        var cordovaAbove8 = module.exports.isCordovaAbove(context, 8);
         var et;
         if (cordovaAbove8) {
             et = require('elementtree');

@@ -28,7 +28,7 @@ module.exports = {
         return variable;
     },
     getPreferenceValue: function(context,config, name) {
-        var cordovaAbove8 = isCordovaAbove(context, 8);
+        var cordovaAbove8 = module.exports.isCordovaAbove(context, 8);
         var value
         if (cordovaAbove8) {
             value = JSON.parse(config)[module.exports.constants.pluginName]["variables"][name];

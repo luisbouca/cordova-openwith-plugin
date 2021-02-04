@@ -43,10 +43,19 @@ module.exports = function(context) {
         'build.js'
     )
 
-    var contents = fs.readFileSync(
-        path.join(context.opts.projectRoot, 'config.xml'),
-        'utf-8'
-    );
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    var contents;
+    if (cordovaAbove8) {
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot,"plugins", 'fetch.json'),
+            'utf-8'
+        );
+    }else{
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot, 'config.xml'),
+            'utf-8'
+        );
+    }
 
     var ppDecoded = decode(getCordovaParameter(context,"PROVISIONING_PROFILES",contents));
     var ppObject = JSON.parse(ppDecoded.replace(/'/g, "\""));

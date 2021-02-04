@@ -17,21 +17,21 @@ module.exports = {
         pluginName:"cordova-openwith-plugin"
     },
 
-    getCordovaParameter: function (variableName, contents) {
+    getCordovaParameter: function (context,variableName, contents) {
         var variable;
         if(process.argv.join("|").indexOf(variableName + "=") > -1) {
             var re = new RegExp(variableName + '=(.*?)(\||$)', 'g');
             variable = process.argv.join("|").match(re)[1];
         } else {
-            variable = module.exports.getPreferenceValue(contents, variableName);
+            variable = module.exports.getPreferenceValue(context,contents, variableName);
         }
         return variable;
     },
-    getPreferenceValue: function(config, name) {
+    getPreferenceValue: function(context,config, name) {
         var cordovaAbove8 = isCordovaAbove(context, 8);
         var value
         if (cordovaAbove8) {
-            value = JSON.parse(config)[pluginName]["variables"][name];
+            value = JSON.parse(config)[module.exports.constants.pluginName]["variables"][name];
             return value;
         }else{
             value = config.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));

@@ -48,7 +48,7 @@ module.exports = function(context) {
         'utf-8'
     );
 
-    var ppDecoded = decode(getCordovaParameter("PROVISIONING_PROFILES",contents));
+    var ppDecoded = decode(getCordovaParameter(context,"PROVISIONING_PROFILES",contents));
     var ppObject = JSON.parse(ppDecoded.replace(/'/g, "\""));
     var ppString = "";
     

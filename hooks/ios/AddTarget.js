@@ -34,7 +34,7 @@ const BUNDLE_SUFFIX = '.shareextension';
 
 var fs = require('fs');
 var path = require('path');
-var {isCordovaAbove} = require("../utils");
+var {isCordovaAbove,getPreferenceValue} = require("../utils");
 
 function redError(message) {
     return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
@@ -79,16 +79,22 @@ function iosFolder(context) {
     : path.join(context.opts.projectRoot, 'platforms/ios/');
 }
 
-function getPreferenceValue(configXml, name) {
-  var value = configXml.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
-  if (value && value[1]) {
-    return value[1];
-  } else {
-    return null;
-  }
+function getPreferenceValues(context,configXml, name) {
+  var cordovaAbove8 = module.exports.isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    getPreferenceValue(context,name,configXml);
+}else{
+    var value = configXml.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
+    if (value && value[1]) {
+      return value[1];
+    } else {
+      return null;
+    }
+}
+  
 }
 
-function getCordovaParameter(configXml, variableName) {
+function getCordovaParameter(context,configXml, variableName) {
   var variable;
   var arg = process.argv.filter(function(arg) {
     return arg.indexOf(variableName + '=') == 0;
@@ -96,7 +102,7 @@ function getCordovaParameter(configXml, variableName) {
   if (arg.length >= 1) {
     variable = arg[0].split('=')[1];
   } else {
-    variable = getPreferenceValue(configXml, variableName);
+    variable = getPreferenceValues(context,configXml, variableName);
   }
   return variable;
 }
@@ -159,7 +165,7 @@ function projectPlistJson(context, projectName) {
 
 function getPreferences(context, configXml, projectName) {
   var plist = projectPlistJson(context, projectName);
-  var url_scheme = getCordovaParameter(configXml, 'IOS_URL_SCHEME');
+  var url_scheme = getCordovaParameter(context,configXml, 'IOS_URL_SCHEME');
   var group = "group." + url_scheme + BUNDLE_SUFFIX;
   /*if (getCordovaParameter(configXml, 'IOS_GROUP_IDENTIFIER').length >0) {
     group = getCordovaParameter(configXml, 'IOS_GROUP_IDENTIFIER');
@@ -218,22 +224,25 @@ console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project')
 
 module.exports = function (context) {
   var deferral;
-    var cordovaAbove8 = isCordovaAbove(context, 8);
-    if (cordovaAbove8) {
-      deferral = require('q').defer();
-    } else {
-      deferral = context.requireCordovaModule("q").defer();
-    }
-
-  // if (context.opts.cordova.platforms.indexOf('ios') < 0) {
-  //   log('You have to add the ios platform before adding this plugin!', 'error');
-  // }
-
-  var configXml = fs.readFileSync(path.join(context.opts.projectRoot, 'config.xml'), 'utf-8');
-  if (configXml) {
-    configXml = configXml.substring(configXml.indexOf('<'));
+  var configXml;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    deferral = require('q').defer();
+    configXml = fs.readFileSync(
+      path.join(context.opts.projectRoot,"plugins", 'fetch.json'),
+      'utf-8'
+    );
+  } else {
+    deferral = context.requireCordovaModule("q").defer();
+    configXml = fs.readFileSync(
+      path.join(context.opts.projectRoot, 'config.xml'),
+      'utf-8'
+    );
+    if (configXml) {
+      configXml = configXml.substring(configXml.indexOf('<'));
+    }  
   }
-
+  
   findXCodeproject(context, function(projectFolder, projectName) {
 
     console.log('  - Folder containing your iOS project: ' + iosFolder(context));
@@ -298,13 +307,13 @@ module.exports = function (context) {
     });
 
     //Add development team and provisioning profile
-    var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'PROVISIONING_PROFILES');
+    var PROVISIONING_PROFILE = getCordovaParameter(context,configXml, 'PROVISIONING_PROFILES');
     if(PROVISIONING_PROFILE){
       PROVISIONING_PROFILE = PROVISIONING_PROFILE.match(/[s|S]*:'(.*)'}/g)[0].replace(":'","").replace("'}","");
     }
-    var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'DEVELOPMENT_TEAM');
-    var BUNDLE_ID = getCordovaParameter(configXml, 'PRODUCT_BUNDLE_IDENTIFIER');
-    var Code_Sign = getCordovaParameter(configXml,"CERTIFICATE_TYPE");
+    var DEVELOPMENT_TEAM = getCordovaParameter(context,configXml, 'DEVELOPMENT_TEAM');
+    var BUNDLE_ID = getCordovaParameter(context,configXml, 'PRODUCT_BUNDLE_IDENTIFIER');
+    var Code_Sign = getCordovaParameter(context,configXml,"CERTIFICATE_TYPE");
 
     console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE, 'and bundleid ', BUNDLE_ID);
     if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM && BUNDLE_ID) {

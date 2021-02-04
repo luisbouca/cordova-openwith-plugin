@@ -82,7 +82,7 @@ function iosFolder(context) {
 function getPreferenceValues(context,configXml, name) {
   var cordovaAbove8 = module.exports.isCordovaAbove(context, 8);
   if (cordovaAbove8) {
-    getPreferenceValue(context,name,configXml);
+    return getPreferenceValue(context,name,configXml);
 }else{
     var value = configXml.match(new RegExp('name="' + name + '" value="(.*?)"', "i"));
     if (value && value[1]) {
@@ -242,7 +242,7 @@ module.exports = function (context) {
       configXml = configXml.substring(configXml.indexOf('<'));
     }  
   }
-  
+
   findXCodeproject(context, function(projectFolder, projectName) {
 
     console.log('  - Folder containing your iOS project: ' + iosFolder(context));

@@ -1,7 +1,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var {getCordovaParameter, log} = require('../utils');
+var {getCordovaParameter,isCordovaAbove, log} = require('../utils');
 var decode = require('decode-html');
 
 module.exports = function(context) {
@@ -15,21 +15,28 @@ module.exports = function(context) {
      var iosFolder = context.opts.cordova.project
     ? context.opts.cordova.project.root
     : path.join(context.opts.projectRoot, 'platforms/ios/');
-    
-    var contents = fs.readFileSync(
-        path.join(context.opts.projectRoot, 'config.xml'),
-        'utf-8'
-    );
-
-    var extensionName = getCordovaParameter("EXTENSION_NAME",contents);
+    var contents;
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (cordovaAbove8) {
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot,"plugins", 'fetch.json'),
+            'utf-8'
+        );
+    }else{
+        contents = fs.readFileSync(
+            path.join(context.opts.projectRoot, 'config.xml'),
+            'utf-8'
+        );
+    }
+    var extensionName = getCordovaParameter(context,"EXTENSION_NAME",contents);
     var xcConfigPath = path.join(iosFolder, extensionName.replace(" ",""), 'Config.xcconfig');
     log(xcConfigPath,"start");
 
     
 
-    var ppDecoded = decode(getCordovaParameter("PROVISIONING_PROFILES",contents));
+    var ppDecoded = decode(getCordovaParameter(context,"PROVISIONING_PROFILES",contents));
     var ppObject = JSON.parse(ppDecoded.replace(/'/g, "\""));
-    var Code_Sign = getCordovaParameter("CERTIFICATE_TYPE",contents);
+    var Code_Sign = getCordovaParameter(context,"CERTIFICATE_TYPE",contents);
 
     //we don't iterate the provisioning profiles here because we don't know  
     //yet how to add multiple provisioning profile info to the same xcconfig. 
@@ -41,7 +48,7 @@ module.exports = function(context) {
                             + 'PROVISIONING_PROFILE=' + value + '\n'
                             + 'CODE_SIGN_IDENTITY=' + "\"" + Code_Sign + '"\n'
                             + 'CODE_SIGN_IDENTITY[sdk=iphoneos*]=' + Code_Sign + '\n'
-                            + 'DEVELOPMENT_TEAM=' + getCordovaParameter("DEVELOPMENT_TEAM",contents) + "\n"
+                            + 'DEVELOPMENT_TEAM=' + getCordovaParameter(context,"DEVELOPMENT_TEAM",contents) + "\n"
                             + 'PRODUCT_DISPLAY_NAME=' + extensionName
 
     

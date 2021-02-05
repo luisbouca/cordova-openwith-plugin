@@ -1,7 +1,7 @@
 
 var fs = require('fs');
 var path = require('path');
-
+var {isCordovaAbove} = require("../utils");
 
 function replacerLegacyStorage(match, p1, p2, offset, string){
     if(!p2.includes("requestLegacyExternalStorage")){
@@ -14,8 +14,13 @@ function replacerLegacyStorage(match, p1, p2, offset, string){
 module.exports = function (context) {
 
     console.log("Start changing Manifest!");
-    var Q = context.requireCordovaModule("q");
-    var deferral = new Q.defer();
+    var deferral;
+    var cordovaAbove8 = isCordovaAbove(context, 8);
+    if (cordovaAbove8) {
+      deferral = require('q').defer();
+    } else {
+      deferral = context.requireCordovaModule("q").defer();
+    }
 
     var projectRoot = context.opts.cordova.project ? context.opts.cordova.project.root : context.opts.projectRoot;
     var manifestPath = path.join(projectRoot,"platforms","android","app","src","main","AndroidManifest.xml");

@@ -34,6 +34,7 @@ const BUNDLE_SUFFIX = ".shareextension";
 
 var fs = require('fs');
 var path = require('path');
+var {isCordovaAbove} = require("../utils");
 
 function redError(message) {
     return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
@@ -74,6 +75,13 @@ function iosFolder(context) {
 }
 
 function parsePbxProject(context, pbxProjectPath) {
+  var xcode;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    xcode = require('xcode');
+  } else {
+    xcode = context.requireCordovaModule("xcode");
+  }
   var xcode = context.requireCordovaModule('xcode');
   console.log('    Parsing existing project at location: ' + pbxProjectPath + '...');
   var pbxProject;
@@ -105,7 +113,13 @@ function projectPlistPath(context, projectName) {
 }
 
 function projectPlistJson(context, projectName) {
-  var plist = context.requireCordovaModule('plist');
+  var plist;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    plist = require('plist');
+  } else {
+    plist = context.requireCordovaModule("plist");
+  }
   var path = projectPlistPath(context, projectName);
   return plist.parse(fs.readFileSync(path, 'utf8'));
 }
@@ -125,8 +139,13 @@ console.log('Removing target "' + PLUGIN_ID + '/ShareExtension" to XCode project
 
 module.exports = function (context) {
 
-  const Q = context.requireCordovaModule('q');
-  var deferral = new Q.defer();
+  var deferral;
+  var cordovaAbove8 = isCordovaAbove(context, 8);
+  if (cordovaAbove8) {
+    deferral = require('q').defer();
+  } else {
+    deferral = context.requireCordovaModule("q").defer();
+  }
 
   findXCodeproject(context, function(projectFolder, projectName) {
 

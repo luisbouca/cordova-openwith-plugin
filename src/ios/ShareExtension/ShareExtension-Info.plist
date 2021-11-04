@@ -35,7 +35,7 @@
 				<key>NSExtensionActivationSupportsFileWithMaxCount</key>
 				<integer>1</integer>
 				<key>NSExtensionActivationSupportsText</key>
-                    <true/>
+                <true/>
 			</dict>
 			<key>NSExtensionActivationUsesStrictMatching</key>
 			<integer>1</integer>

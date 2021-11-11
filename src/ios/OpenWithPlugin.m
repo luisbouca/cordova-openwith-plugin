@@ -129,7 +129,7 @@
         [_userDefaults removeObjectForKey:@"linksShared"];
         [_userDefaults synchronize];
         if(values == nil){
-            if (self.handlerCallback == nil) {
+            if (self.handlerCallback != nil) {
                 CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could Not retrieve Shared Files Information!"];
                 pluginResult.keepCallback = [NSNumber numberWithBool:YES];
                 [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
@@ -137,7 +137,6 @@
             return;
         }
     }
-    NSDictionary* result;
     if (self.handlerCallback == nil) {
         if (storedFiles == nil) {
             storedFiles = [NSMutableArray new];
